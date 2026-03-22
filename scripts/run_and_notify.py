@@ -190,7 +190,10 @@ def read_site_url_config() -> tuple[str, str]:
             continue
         k, v = line.split(":", 1)
         k = k.strip()
-        v = v.strip().strip('"').strip("'")
+        v = v.strip()
+        # remove inline yaml comments: url: "https://x" # comment
+        v = re.sub(r"\s+#.*$", "", v).strip()
+        v = v.strip('"').strip("'")
         if k == "url":
             site_url = v
         elif k == "baseurl":
@@ -302,7 +305,7 @@ def main() -> int:
     p.add_argument("--source-file", default="", help="manual mode: use local txt/md as source text (skip URL fetch)")
     p.add_argument("--category", default="tech", choices=["all", "tech", "game"])
     p.add_argument("--sources-file", default=str(ROOT / "sources.json"))
-    p.add_argument("--max-posts", type=int, default=3, help="auto mode: max posts per run")
+    p.add_argument("--max-posts", type=int, default=0, help="auto mode: max posts per run (0 means unlimited)")
     p.add_argument("--strict-select", action="store_true", help="enable strict quality selection mode in auto")
     p.add_argument("--min-selection-score", type=int, default=70, help="strict mode score threshold")
     p.add_argument("--max-skip-report", type=int, default=8, help="strict mode: max skipped reasons from pipeline")
@@ -391,6 +394,9 @@ def main() -> int:
     blog_links = [x for x in blog_links if x]
 
     notify_lines = ["✅ Codex 已完成"]
+    if args.mode == "auto":
+        limit_text = "不限制" if int(args.max_posts) <= 0 else str(int(args.max_posts))
+        notify_lines.append(f"本轮上限：{limit_text}")
     if generated_paths:
         notify_lines.append(f"本次生成：{len(generated_paths)} 篇")
 
@@ -398,19 +404,22 @@ def main() -> int:
         notify_lines.append("为什么入选：")
         for x in selected_fb[:5]:
             why = x["why"][:80] + ("…" if len(x["why"]) > 80 else "")
-            notify_lines.append(f"- [{x['score']}] {why}")
+            notify_lines.append(f"- [{x['score']}] {x['url']}")
+            notify_lines.append(f"  理由：{why}")
 
     if merged_fb:
         notify_lines.append("合并快讯（重要但信息少）：")
         for x in merged_fb[:4]:
             why = x["why"][:80] + ("…" if len(x["why"]) > 80 else "")
-            notify_lines.append(f"- [{x['score']}] {why}")
+            notify_lines.append(f"- [{x['score']}] {x['url']}")
+            notify_lines.append(f"  理由：{why}")
 
     if not args.no_notify_skip_reasons and skipped_fb:
         notify_lines.append("为什么未入选（Top）：")
         for x in skipped_fb[:5]:
             why = x["why"][:80] + ("…" if len(x["why"]) > 80 else "")
-            notify_lines.append(f"- [{x['score']}] {why}")
+            notify_lines.append(f"- [{x['score']}] {x['url']}")
+            notify_lines.append(f"  原因：{why}")
 
     if args.auto_publish:
         ok, msg, sha, commit_url = git_publish(generated_paths, args)
