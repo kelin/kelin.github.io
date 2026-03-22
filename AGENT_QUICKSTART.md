@@ -1,8 +1,12 @@
 # Agent Quickstart (Ultra Short)
 
-给新 agent 的一句话：
+给新 agent 的一句话（自动）：
 
 `先读 /home/ubuntu/Documents/githubBlog/kelin.github.io/AGENT_QUICKSTART.md，然后执行 today-tech。`
+
+给新 agent 的一句话（你发了指定链接，手动特写）：
+
+`先读 /home/ubuntu/Documents/githubBlog/kelin.github.io/AGENT_QUICKSTART.md，然后执行 link-tech <URL>。`
 
 ---
 
@@ -18,6 +22,29 @@ cd /home/ubuntu/Documents/githubBlog/kelin.github.io
 ```bash
 cd /home/ubuntu/Documents/githubBlog/kelin.github.io
 ./scripts/auto_post_notify.sh game
+```
+
+## link-tech <URL>
+
+```bash
+cd /home/ubuntu/Documents/githubBlog/kelin.github.io
+python3 scripts/run_and_notify.py --mode manual --url "<URL>" --category tech --auto-publish --push
+```
+
+## link-game <URL>
+
+```bash
+cd /home/ubuntu/Documents/githubBlog/kelin.github.io
+python3 scripts/run_and_notify.py --mode manual --url "<URL>" --category game --auto-publish --push
+```
+
+## link-tech-file <URL> <SOURCE_FILE>
+
+> 用于反爬拦截：手工提供文本文件（txt/md）作为内容源。
+
+```bash
+cd /home/ubuntu/Documents/githubBlog/kelin.github.io
+python3 scripts/run_and_notify.py --mode manual --url "<URL>" --category tech --source-file "<SOURCE_FILE>" --auto-publish --push
 ```
 
 ---
