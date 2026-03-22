@@ -4,15 +4,17 @@ title: About
 permalink: /about/
 ---
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](https://jekyllrb.com/)
+你好，我是 Li cola。
 
-You can find the source code for Minima at GitHub:
-[jekyll][jekyll-organization] /
-[minima](https://github.com/jekyll/minima)
+这个博客主要记录三类内容：
 
-You can find the source code for Jekyll at GitHub:
-[jekyll][jekyll-organization] /
-[jekyll](https://github.com/jekyll/jekyll)
+1. AI 与工程实践（工具、工作流、Agent、自动化）
+2. 游戏开发技术（图形、性能、系统设计）
+3. 高质量播客/视频/博客的结构化总结
 
+写作风格：
+- 尽量基于一手来源
+- 少空话，多可执行结论
+- 每篇单独成文，便于检索与复用
 
-[jekyll-organization]: https://github.com/jekyll
+如果你也在做 AI 或游戏开发，欢迎交流。
