@@ -17,6 +17,8 @@
 - `scripts/blog_pipeline.py` 核心脚本
 - `scripts/manual_post.sh` 手动快捷命令
 - `scripts/auto_post.sh` 自动快捷命令
+- `scripts/run_and_notify.py` 运行后发送 Telegram 通知
+- `scripts/auto_post_notify.sh` 自动模式 + Telegram 通知快捷命令
 - `sources.json` 自动模式信源列表（含 category/type）
 - `prompts/post_prompt.md` **Codex 提示词模板（可独立修改）**
 - `.blog_pipeline/state.json` 自动模式去重状态（运行后生成）
@@ -54,6 +56,45 @@ cd /home/ubuntu/Documents/githubBlog/kelin.github.io
 3. 选择“最新且未处理”的 1 条
 4. 生成 1 篇 `_posts/YYYY-MM-DD-xxx.md`
 5. 记录到 `.blog_pipeline/state.json`
+
+---
+
+## 生成完成后发 Telegram（可指定 Bot）
+
+先配置环境变量（推荐）：
+
+```bash
+export TG_BOT_TOKEN="123456:ABCDEF..."
+export TG_CHAT_ID="8775324003"
+```
+
+然后运行：
+
+```bash
+cd /home/ubuntu/Documents/githubBlog/kelin.github.io
+./scripts/auto_post_notify.sh tech
+```
+
+或者用完整命令（支持手动/自动两种模式）：
+
+```bash
+python3 scripts/run_and_notify.py --mode auto --category tech
+python3 scripts/run_and_notify.py --mode manual --url "https://www.latent.space/p/dreamer" --category tech
+```
+
+如果你想指定**另一个 bot**，直接临时覆盖参数即可：
+
+```bash
+python3 scripts/run_and_notify.py \
+  --mode auto --category game \
+  --bot-token "<另一个BOT的TOKEN>" \
+  --chat-id "<目标chat_id>"
+```
+
+说明：
+- 脚本通过 `subprocess.run(...)` 阻塞等待 `codex exec` 结束。
+- 成功判定：`returncode == 0`，并解析到 `[OK] generated: ...`。
+- 成功后发送 “✅ 已完成 + 文件路径”；失败后发送错误摘要。
 
 ---
 
