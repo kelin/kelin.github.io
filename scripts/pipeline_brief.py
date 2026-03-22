@@ -3,8 +3,9 @@ from __future__ import annotations
 import json
 import re
 import urllib.request
+from pathlib import Path
 
-from pipeline_common import feed_items, now_cn
+from pipeline_common import feed_items, load_json, now_cn, parse_date
 
 DAILY_BRIEF_HN_FEED = "https://hnrss.org/frontpage"
 DAILY_BRIEF_ARXIV_FEED = "https://export.arxiv.org/rss/cs.AI"
@@ -13,6 +14,15 @@ DAILY_BRIEF_HF_API = "https://huggingface.co/api/trending?type=model"
 DAILY_BRIEF_GITHUB_PY_URL = "https://github.com/trending/python?since=daily"
 
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36"
+
+GAME_SOURCE_HINTS = [
+    "gdc",
+    "designer notes",
+    "eggplant",
+    "game maker",
+    "deconstructor",
+    "idlethumbs",
+]
 
 
 def build_brief_roundup_post(items: list[dict], category: str) -> tuple[dict, str]:
@@ -103,6 +113,8 @@ def fetch_hf_trending_models(max_items: int = 8) -> list[dict]:
                 "downloads": rd.get("downloads", 0),
                 "updated": rd.get("lastModified", ""),
                 "pipeline_tag": rd.get("pipeline_tag", ""),
+                "source": "HuggingFace Trending Models",
+                "category": "tech",
             }
         )
     return out
@@ -126,12 +138,113 @@ def fetch_github_trending_python(max_items: int = 8) -> list[dict]:
             {
                 "title": repo,
                 "url": f"https://github.com/{repo}",
+                "source": "GitHub Trending Python",
+                "category": "tech",
             }
         )
         if len(out) >= max_items:
             break
 
     return out
+
+
+def infer_item_category(item: dict) -> str:
+    c = (item.get("category") or "").strip().lower()
+    if c in {"tech", "game"}:
+        return c
+
+    src = (item.get("source") or "").lower()
+    if any(k in src for k in GAME_SOURCE_HINTS):
+        return "game"
+    return "tech"
+
+
+def split_rejected_by_category(rejected_pool: list[dict]) -> tuple[list[dict], list[dict]]:
+    tech: list[dict] = []
+    game: list[dict] = []
+    for x in rejected_pool:
+        cat = infer_item_category(x)
+        x["category"] = cat
+        if cat == "game":
+            game.append(x)
+        else:
+            tech.append(x)
+
+    tech.sort(key=lambda z: (z.get("score", 0), z.get("ts", 0)), reverse=True)
+    game.sort(key=lambda z: (z.get("score", 0), z.get("ts", 0)), reverse=True)
+    return tech, game
+
+
+def fetch_category_source_items(sources_file: str | Path, category: str, max_sources: int = 4, max_items_per_source: int = 1) -> list[dict]:
+    sources = load_json(Path(sources_file), default=[])
+    out: list[dict] = []
+
+    for s in sources:
+        if not s.get("enabled", True):
+            continue
+        if s.get("category", "tech") != category:
+            continue
+
+        source_name = s.get("name") or s.get("feed") or "Unknown"
+        try:
+            items = feed_items(s)
+        except Exception:
+            continue
+
+        for it in items[:max_items_per_source]:
+            out.append(
+                {
+                    "title": it.get("title", ""),
+                    "url": it.get("url", ""),
+                    "source": source_name,
+                    "published": it.get("published", ""),
+                    "category": category,
+                }
+            )
+
+    out.sort(key=lambda x: parse_date(x.get("published", "")).timestamp() if parse_date(x.get("published", "")) else 0, reverse=True)
+
+    # 按来源去重，最多保留 N 个来源
+    final: list[dict] = []
+    seen_sources: set[str] = set()
+    for it in out:
+        src = (it.get("source") or "").strip()
+        if not src or src in seen_sources:
+            continue
+        seen_sources.add(src)
+        final.append(it)
+        if len(final) >= max_sources:
+            break
+
+    return final
+
+
+def _append_group(lines: list[str], label: str, items: list[dict], max_items: int = 12) -> None:
+    lines.append(label)
+    if not items:
+        lines.append("(empty)")
+        lines.append("")
+        return
+
+    for i, x in enumerate(items[:max_items], 1):
+        extra_bits = []
+        if x.get("score") is not None:
+            extra_bits.append(f"score={x.get('score', 0)}")
+        if x.get("why_not"):
+            extra_bits.append(f"why_not={x.get('why_not')}")
+        if x.get("likes"):
+            extra_bits.append(f"likes={x.get('likes')}")
+        if x.get("downloads"):
+            extra_bits.append(f"downloads={x.get('downloads')}")
+        if x.get("updated"):
+            extra_bits.append(f"updated={x.get('updated')}")
+        extra = " | ".join(extra_bits)
+        if extra:
+            lines.append(f"{i}. {x.get('source','')} | {x.get('title','')} | {extra} | url={x.get('url','')}")
+        else:
+            lines.append(f"{i}. {x.get('source','')} | {x.get('title','')} | url={x.get('url','')}")
+
+    lines.append("")
 
 
 def build_daily_brief_prompt(
@@ -141,49 +254,39 @@ def build_daily_brief_prompt(
     arxiv_items: list[dict],
     hf_items: list[dict],
     gh_py_items: list[dict],
+    game_source_items: list[dict],
 ) -> str:
+    tech_rejected, game_rejected = split_rejected_by_category(rejected_pool)
+
+    # 标准化 source 字段，方便模型按来源分章
+    for x in hn_items:
+        x.setdefault("source", "Hacker News Front Page")
+        x.setdefault("category", "tech")
+    for x in arxiv_items:
+        x.setdefault("source", "arXiv cs.AI")
+        x.setdefault("category", "tech")
+
     lines: list[str] = []
     lines.append(f"你是信息策展编辑。请写一篇 {day_key} 的‘每日快讯’中文短文，面向 AI/游戏开发者。")
-    lines.append("要求：")
-    lines.append("1) 不要每条都用同一句开头（例如不要重复‘为什么值得看’）。")
-    lines.append("2) 每条用 3 行：核心事实 / 影响判断 / 建议动作，再给原链接。")
-    lines.append("3) 语言简洁但信息要具体，不要空泛。")
-    lines.append("4) 必须包含两个部分：主文落选重点 + 外部信源精选。")
-    lines.append(f"5) 标题固定：{day_key} 每日快讯。")
-    lines.append("6) 不确定就写‘源信息不足’，不要编造。")
+    lines.append("必须使用以下固定结构：")
+    lines.append("## Tech 章节")
+    lines.append("### Tech｜主文落选重点（按来源分小节）")
+    lines.append("### Tech｜外部来源（按来源分小节：HN、arXiv、HF、GitHub）")
+    lines.append("## Game 章节")
+    lines.append("### Game｜主文落选重点（按来源分小节）")
+    lines.append("### Game｜来源补充（按来源分小节）")
+    lines.append("每个条目必须含 4 行：核心事实 / 影响判断 / 建议动作 / 原链接。")
+    lines.append("不要每条都用同一句开头，不要空话，不要编造。")
+    lines.append(f"标题固定：{day_key} 每日快讯")
     lines.append("")
 
-    lines.append("[主文落选池]")
-    if rejected_pool:
-        for i, x in enumerate(rejected_pool[:20], 1):
-            lines.append(
-                f"{i}. {x.get('title','')} | {x.get('source','')} | score={x.get('score',0)} | why_not={x.get('why_not','')} | url={x.get('url','')}"
-            )
-    else:
-        lines.append("(empty)")
+    _append_group(lines, "[TECH_REJECTED]", tech_rejected, max_items=15)
+    _append_group(lines, "[GAME_REJECTED]", game_rejected, max_items=15)
+    _append_group(lines, "[TECH_EXTERNAL_HN]", hn_items, max_items=8)
+    _append_group(lines, "[TECH_EXTERNAL_ARXIV]", arxiv_items, max_items=8)
+    _append_group(lines, "[TECH_EXTERNAL_HF]", hf_items, max_items=8)
+    _append_group(lines, "[TECH_EXTERNAL_GITHUB]", gh_py_items, max_items=8)
+    _append_group(lines, "[GAME_EXTERNAL_FROM_SOURCES]", game_source_items, max_items=8)
 
-    lines.append("")
-    lines.append("[Hacker News Front Page]")
-    for i, x in enumerate(hn_items[:10], 1):
-        lines.append(f"{i}. {x.get('title','')} | {x.get('url','')}")
-
-    lines.append("")
-    lines.append("[arXiv cs.AI]")
-    for i, x in enumerate(arxiv_items[:10], 1):
-        lines.append(f"{i}. {x.get('title','')} | {x.get('url','')}")
-
-    lines.append("")
-    lines.append("[HuggingFace Trending Models]")
-    for i, x in enumerate(hf_items[:10], 1):
-        lines.append(
-            f"{i}. {x.get('title','')} | likes={x.get('likes',0)} | downloads={x.get('downloads',0)} | updated={x.get('updated','')} | url={x.get('url','')}"
-        )
-
-    lines.append("")
-    lines.append("[GitHub Trending Python]")
-    for i, x in enumerate(gh_py_items[:10], 1):
-        lines.append(f"{i}. {x.get('title','')} | {x.get('url','')}")
-
-    lines.append("")
     lines.append("输出 Markdown，不要 front matter。")
     return "\n".join(lines)

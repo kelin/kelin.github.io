@@ -15,6 +15,7 @@ from pipeline_brief import (
     DAILY_BRIEF_HN_FEED,
     build_brief_roundup_post,
     build_daily_brief_prompt,
+    fetch_category_source_items,
     fetch_github_trending_python,
     fetch_hf_trending_models,
     top_feed_items_for_brief,
@@ -191,6 +192,7 @@ def cmd_daily_brief(args) -> int:
     arxiv_items: list[dict] = []
     hf_items: list[dict] = []
     gh_py_items: list[dict] = []
+    game_source_items: list[dict] = []
 
     try:
         hn_items = top_feed_items_for_brief(DAILY_BRIEF_HN_FEED, "Hacker News", max_items=10)
@@ -212,7 +214,12 @@ def cmd_daily_brief(args) -> int:
     except Exception as e:
         print(f"[WARN] daily brief GitHub trending fetch failed: {e}")
 
-    if not rejected_pool and not hn_items and not arxiv_items and not hf_items and not gh_py_items:
+    try:
+        game_source_items = fetch_category_source_items(SOURCES_FILE, category="game", max_sources=6, max_items_per_source=1)
+    except Exception as e:
+        print(f"[WARN] daily brief game source snapshot failed: {e}")
+
+    if not rejected_pool and not hn_items and not arxiv_items and not hf_items and not gh_py_items and not game_source_items:
         print("[ERR] daily brief has no source material")
         return 4
 
@@ -223,6 +230,7 @@ def cmd_daily_brief(args) -> int:
         arxiv_items=arxiv_items,
         hf_items=hf_items,
         gh_py_items=gh_py_items,
+        game_source_items=game_source_items,
     )
 
     body = run_codex(prompt=prompt, model=args.model, reasoning=args.reasoning)

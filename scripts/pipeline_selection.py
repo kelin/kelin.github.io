@@ -278,6 +278,7 @@ def update_daily_brief_pool(state: dict, rejected_items: list[dict]) -> None:
                 "url": it.get("url", ""),
                 "source": it.get("source", ""),
                 "description": it.get("description", ""),
+                "category": it.get("category", "tech"),
                 "score": it.get("_score", 0),
                 "why_not": it.get("_why_not", ""),
                 "ts": it.get("_ts", 0),
