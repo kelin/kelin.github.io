@@ -30,6 +30,21 @@
   padding: 0;
 }
 
+.home-sidebar .nav-list {
+  margin-left: 0;
+  list-style: none;
+}
+
+.home-sidebar .nav-list > li {
+  margin: 0 0 8px 0;
+}
+
+.home-sidebar .row-two {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 .home-main h2 {
   margin-top: 0;
 }

@@ -7,9 +7,12 @@ permalink: /
 <div class="home-grid">
   <aside class="home-sidebar">
     <h3>目录</h3>
-    <ul>
-      <li><a href="{{ '/tech/' | relative_url }}">科技（Tech）</a></li>
-      <li><a href="{{ '/game/' | relative_url }}">游戏（Game）</a></li>
+    <ul class="nav-list">
+      <li class="row-two">
+        <a href="{{ '/tech/' | relative_url }}">科技（Tech）</a>
+        <a href="{{ '/game/' | relative_url }}">游戏（Game）</a>
+      </li>
+      <li><a href="{{ '/daily-brief/' | relative_url }}">每日快讯（Daily Brief）</a></li>
       <li><a href="{{ '/archives/' | relative_url }}">按日期归档（Archives）</a></li>
     </ul>
 

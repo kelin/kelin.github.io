@@ -31,6 +31,7 @@ github_username:  kelin
 header_pages:
   - tech.markdown
   - game.markdown
+  - daily-brief.markdown
   - archives.markdown
   - about.markdown
 
