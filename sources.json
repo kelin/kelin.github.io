@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Latent Space",
+    "feed": "https://api.substack.com/feed/podcast/1084089.rss"
+  },
+  {
+    "name": "AI+a16z",
+    "feed": "https://feeds.simplecast.com/Hb_IuXOo"
+  },
+  {
+    "name": "a16z",
+    "feed": "https://feeds.simplecast.com/JGE3yC0V"
+  },
+  {
+    "name": "Simon Willison",
+    "feed": "https://simonwillison.net/atom/everything/"
+  },
+  {
+    "name": "Interconnects",
+    "feed": "https://www.interconnects.ai/feed"
+  },
+  {
+    "name": "Pragmatic Engineer",
+    "feed": "https://newsletter.pragmaticengineer.com/feed"
+  }
+]
