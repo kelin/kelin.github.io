@@ -4,3 +4,5 @@ _site
 .jekyll-metadata
 vendor
 .blog_pipeline/notify.env
+.blog_pipeline/manual_inputs/
+_posts/*.swp
