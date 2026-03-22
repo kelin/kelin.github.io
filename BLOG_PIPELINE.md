@@ -110,6 +110,7 @@ python3 scripts/run_and_notify.py \
 - 开启 `--auto-publish --push` 后，会自动：`git add` → `git commit` → `git push`。
 - 推送成功会在 Telegram 通知里附上 commit 短 SHA 和 commit 链接（GitHub remote 时自动拼接）。
 - 任一步失败（生成/提交/推送）都会发失败摘要。
+- auto 模式默认“无新内容不通知”；如需也通知可加 `--notify-no-new`。
 
 ---
 
@@ -146,24 +147,25 @@ git push
 
 ---
 
-## 定时任务（可选）
+## 定时任务（Linux cron）
 
-每天 08:00 自动抓科技圈一篇：
+当前已按你的要求配置：
+- tech：每天 `10:00`、`20:00`
+- game：每天 `21:00`
+- 且默认 **无新内容不发 Telegram**（只在有新文章或失败时通知）
+
+可用命令查看：
 
 ```bash
-crontab -e
+crontab -l
 ```
 
-加入：
+如果要手动重配，可在 `crontab -e` 中使用：
 
 ```cron
-0 8 * * * cd /home/ubuntu/Documents/githubBlog/kelin.github.io && ./scripts/auto_post.sh tech >> /tmp/blog-auto-tech.log 2>&1
-```
-
-每天 20:00 自动抓游戏圈一篇：
-
-```cron
-0 20 * * * cd /home/ubuntu/Documents/githubBlog/kelin.github.io && ./scripts/auto_post.sh game >> /tmp/blog-auto-game.log 2>&1
+0 10 * * * cd /home/ubuntu/Documents/githubBlog/kelin.github.io && /usr/bin/flock -xn /tmp/kelin_blog_auto.lock -c './scripts/auto_post_notify.sh tech >> /tmp/kelin-blog-tech-1000.log 2>&1'
+0 20 * * * cd /home/ubuntu/Documents/githubBlog/kelin.github.io && /usr/bin/flock -xn /tmp/kelin_blog_auto.lock -c './scripts/auto_post_notify.sh tech >> /tmp/kelin-blog-tech-2000.log 2>&1'
+0 21 * * * cd /home/ubuntu/Documents/githubBlog/kelin.github.io && /usr/bin/flock -xn /tmp/kelin_blog_auto.lock -c './scripts/auto_post_notify.sh game >> /tmp/kelin-blog-game-2100.log 2>&1'
 ```
 
 ---

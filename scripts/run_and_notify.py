@@ -53,6 +53,11 @@ def extract_generated_path(stdout: str) -> str:
     return m.group(1).strip() if m else ""
 
 
+def is_no_new_items(stdout: str) -> bool:
+    # from blog_pipeline auto mode: [OK] no new items
+    return "[OK] no new items" in (stdout or "")
+
+
 def build_pipeline_cmd(args) -> list[str]:
     cmd = [
         sys.executable,
@@ -230,6 +235,7 @@ def main() -> int:
     p.add_argument("--notify-start", action="store_true", help="开始时也发一条通知")
     p.add_argument("--dry-run-notify", action="store_true", help="只打印通知内容，不实际发送")
     p.add_argument("--notify-only", action="store_true", help="仅发测试通知，不跑 pipeline")
+    p.add_argument("--notify-no-new", action="store_true", help="auto 模式无新内容时也发送通知（默认不发）")
 
     # git publish args
     p.add_argument("--auto-publish", action="store_true", help="生成成功后自动 git add/commit")
@@ -281,6 +287,15 @@ def main() -> int:
         if stderr:
             print(stderr, file=sys.stderr)
         return proc.returncode
+
+    if args.mode == "auto" and is_no_new_items(stdout):
+        if args.notify_no_new:
+            maybe_notify(f"ℹ️ 本次检查无新内容\ncategory={args.category}")
+        if stdout:
+            print(stdout)
+        if stderr:
+            print(stderr, file=sys.stderr)
+        return 0
 
     out_path = extract_generated_path(stdout)
     notify_lines = ["✅ Codex 已完成"]
