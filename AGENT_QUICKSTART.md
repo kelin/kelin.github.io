@@ -1,14 +1,28 @@
 # Agent Quickstart (Ultra Short)
 
-给新 agent 的一句话（自动）：
+> 这是“任务关键词 → 实际命令”的对照表。
+> `today-tech / link-tech` 这些是**关键词**，不是系统内置命令。
 
-`先读 /home/ubuntu/Documents/githubBlog/kelin.github.io/AGENT_QUICKSTART.md，然后执行 today-tech。`
+## 给新 agent 的最短消息模板（直接复制）
 
-给新 agent 的一句话（你发了指定链接，手动特写）：
+### 1) 自动跑科技圈（从 sources 抓）
+`请先读 /home/ubuntu/Documents/githubBlog/kelin.github.io/AGENT_QUICKSTART.md，然后执行关键词 [today-tech]。`
 
-`先读 /home/ubuntu/Documents/githubBlog/kelin.github.io/AGENT_QUICKSTART.md，然后执行 link-tech <URL>。`
+### 2) 自动跑游戏圈（从 sources 抓）
+`请先读 /home/ubuntu/Documents/githubBlog/kelin.github.io/AGENT_QUICKSTART.md，然后执行关键词 [today-game]。`
+
+### 3) 我给你一个指定链接，做 tech 特写
+`请先读 /home/ubuntu/Documents/githubBlog/kelin.github.io/AGENT_QUICKSTART.md，然后执行关键词 [link-tech]，URL=<你的链接>。`
+
+### 4) 我给你一个指定链接，做 game 特写
+`请先读 /home/ubuntu/Documents/githubBlog/kelin.github.io/AGENT_QUICKSTART.md，然后执行关键词 [link-game]，URL=<你的链接>。`
+
+### 5) 链接被反爬，改用本地文本
+`请先读 /home/ubuntu/Documents/githubBlog/kelin.github.io/AGENT_QUICKSTART.md，然后执行关键词 [link-tech-file]，URL=<你的链接>，SOURCE_FILE=<txt或md路径>。`
 
 ---
+
+## 关键词对应命令
 
 ## today-tech
 
@@ -24,21 +38,21 @@ cd /home/ubuntu/Documents/githubBlog/kelin.github.io
 ./scripts/auto_post_notify.sh game
 ```
 
-## link-tech <URL>
+## link-tech (URL)
 
 ```bash
 cd /home/ubuntu/Documents/githubBlog/kelin.github.io
 python3 scripts/run_and_notify.py --mode manual --url "<URL>" --category tech --auto-publish --push
 ```
 
-## link-game <URL>
+## link-game (URL)
 
 ```bash
 cd /home/ubuntu/Documents/githubBlog/kelin.github.io
 python3 scripts/run_and_notify.py --mode manual --url "<URL>" --category game --auto-publish --push
 ```
 
-## link-tech-file <URL> <SOURCE_FILE>
+## link-tech-file (URL + SOURCE_FILE)
 
 > 用于反爬拦截：手工提供文本文件（txt/md）作为内容源。
 
