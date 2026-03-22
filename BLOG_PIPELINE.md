@@ -68,6 +68,16 @@ export TG_BOT_TOKEN="123456:ABCDEF..."
 export TG_CHAT_ID="8775324003"
 ```
 
+或者写入本地文件（默认自动读取，不会进 git）：
+
+```bash
+cat > .blog_pipeline/notify.env <<'EOF'
+TG_BOT_TOKEN=123456:ABCDEF...
+TG_CHAT_ID=8775324003
+EOF
+chmod 600 .blog_pipeline/notify.env
+```
+
 然后运行：
 
 ```bash

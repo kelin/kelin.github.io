@@ -4,7 +4,6 @@ from __future__ import annotations
 import argparse
 import os
 import re
-import shlex
 import subprocess
 import sys
 import urllib.parse
@@ -13,6 +12,27 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PIPELINE = ROOT / "scripts" / "blog_pipeline.py"
+DEFAULT_NOTIFY_ENV_FILE = ROOT / ".blog_pipeline" / "notify.env"
+
+
+def load_env_file(path: Path) -> dict[str, str]:
+    envs: dict[str, str] = {}
+    if not path.exists():
+        return envs
+
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            continue
+
+        k, v = line.split("=", 1)
+        k = k.strip()
+        v = v.strip().strip('"').strip("'")
+        if k:
+            envs[k] = v
+    return envs
 
 
 def tg_send(bot_token: str, chat_id: str, text: str, disable_preview: bool = True) -> None:
@@ -74,6 +94,10 @@ def build_pipeline_cmd(args) -> list[str]:
 
 
 def main() -> int:
+    file_env = load_env_file(DEFAULT_NOTIFY_ENV_FILE)
+    default_bot_token = os.getenv("TG_BOT_TOKEN", "").strip() or file_env.get("TG_BOT_TOKEN", "")
+    default_chat_id = os.getenv("TG_CHAT_ID", "").strip() or file_env.get("TG_CHAT_ID", "")
+
     p = argparse.ArgumentParser(description="Run blog pipeline, then notify Telegram when done")
     p.add_argument("--mode", choices=["manual", "auto"], required=True)
 
@@ -92,16 +116,18 @@ def main() -> int:
     p.add_argument("--prompt-file", default=str(ROOT / "prompts" / "post_prompt.md"))
 
     # telegram args
-    p.add_argument("--bot-token", default=os.getenv("TG_BOT_TOKEN", ""))
-    p.add_argument("--chat-id", default=os.getenv("TG_CHAT_ID", ""))
+    p.add_argument("--notify-env-file", default=str(DEFAULT_NOTIFY_ENV_FILE), help="telegram env file (optional)")
+    p.add_argument("--bot-token", default=default_bot_token)
+    p.add_argument("--chat-id", default=default_chat_id)
     p.add_argument("--notify-start", action="store_true", help="开始时也发一条通知")
     p.add_argument("--dry-run-notify", action="store_true", help="只打印通知内容，不实际发送")
     p.add_argument("--notify-only", action="store_true", help="仅发测试通知，不跑 pipeline")
 
     args = p.parse_args()
 
-    bot_token = args.bot_token.strip()
-    chat_id = args.chat_id.strip()
+    runtime_file_env = load_env_file(Path(args.notify_env_file)) if args.notify_env_file else {}
+    bot_token = args.bot_token.strip() or runtime_file_env.get("TG_BOT_TOKEN", "")
+    chat_id = args.chat_id.strip() or runtime_file_env.get("TG_CHAT_ID", "")
 
     if not bot_token or not chat_id:
         print("[WARN] 未设置 Telegram bot token/chat id，通知将跳过。")
@@ -120,7 +146,6 @@ def main() -> int:
         return 0
 
     cmd = build_pipeline_cmd(args)
-    cmd_display = " ".join(shlex.quote(x) for x in cmd)
 
     if args.notify_start:
         maybe_notify(f"🚀 开始生成文章\nmode={args.mode} category={args.category}")
