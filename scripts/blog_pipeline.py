@@ -33,6 +33,44 @@ PROMPT_FILE = ROOT / "prompts" / "post_prompt.md"
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36"
 DEFAULT_MAX_SOURCE_CHARS = 22000
 DEFAULT_MAX_ITEMS_PER_FEED = 30
+DEFAULT_MIN_SELECTION_SCORE = 70
+DEFAULT_MAX_SKIP_REPORT = 8
+DEFAULT_MAX_BRIEF_ITEMS = 5
+LOW_INFO_DESC_CHARS = 120
+
+SOURCE_QUALITY_HINTS = [
+    ("dwarkesh", 30, "高质量深访"),
+    ("latent", 29, "工程向深度播客"),
+    ("cognitive revolution", 28, "AI 深度讨论"),
+    ("lex fridman", 26, "长访谈信息密度高"),
+    ("designer notes", 26, "游戏研发一手访谈"),
+    ("deconstructor", 26, "游戏行业深度分析"),
+    ("eggplant", 22, "游戏设计访谈"),
+    ("aias", 22, "游戏制作相关访谈"),
+    ("hard fork", 18, "资讯+观点型节目"),
+    ("gdc", 16, "官方资讯流"),
+]
+
+IMPORTANT_KEYWORDS = [
+    "openai", "anthropic", "gemini", "nvidia", "unity", "unreal", "steam", "xbox", "playstation",
+    "lawsuit", "regulation", "security", "vulnerability", "post-mortem", "benchmark", "release",
+    "重大", "监管", "漏洞", "复盘", "崩溃", "事故", "发布",
+]
+
+MARKETING_KEYWORDS = [
+    "sponsor", "sponsored", "promo", "promotion", "webinar", "register", "subscribe", "discount",
+    "join us", "coming soon", "newsletter", "立即购买", "限时", "优惠", "报名", "直播预告",
+]
+
+ACTIONABLE_KEYWORDS = [
+    "how", "guide", "case study", "post-mortem", "benchmark", "profiling", "architecture",
+    "教程", "实践", "方法", "复盘", "架构", "性能", "排障",
+]
+
+NOVELTY_KEYWORDS = [
+    "2026", "new", "launch", "release", "update", "paper", "open-source", "breaking",
+    "发布", "开源", "更新", "首发", "新", "论文",
+]
 
 
 # -------------------- helpers --------------------
@@ -332,6 +370,192 @@ def write_post(meta: dict, body_md: str, out_name: str | None = None) -> Path:
 
 # -------------------- picking --------------------
 
+def contains_any(text: str, keywords: list[str]) -> bool:
+    t = (text or "").lower()
+    return any(k in t for k in keywords)
+
+
+def source_quality_score(source_name: str) -> tuple[int, str]:
+    n = (source_name or "").lower()
+    for key, score, reason in SOURCE_QUALITY_HINTS:
+        if key in n:
+            return score, reason
+    return 16, "常规来源"
+
+
+def evaluate_candidate(item: dict, min_selection_score: int) -> dict:
+    title = (item.get("title") or "").strip()
+    desc = (item.get("description") or "").strip()
+    source = (item.get("source") or "").strip()
+    source_type = (item.get("source_type") or "").strip().lower()
+    text = f"{title} {desc}".lower()
+
+    score = 0
+    reasons: list[str] = []
+    skip_reasons: list[str] = []
+
+    src_score, src_reason = source_quality_score(source)
+    score += src_score
+    reasons.append(f"来源质量 {src_score}/30（{src_reason}）")
+
+    dlen = len(desc)
+    if dlen >= 600:
+        density = 25
+    elif dlen >= 350:
+        density = 20
+    elif dlen >= 180:
+        density = 15
+    elif dlen >= 90:
+        density = 9
+    else:
+        density = 3
+    score += density
+    reasons.append(f"信息密度 {density}/25")
+
+    if contains_any(text, NOVELTY_KEYWORDS):
+        novelty = 14
+    else:
+        novelty = 8
+    score += novelty
+    reasons.append(f"新颖度 {novelty}/20")
+
+    if contains_any(text, ACTIONABLE_KEYWORDS):
+        actionable = 12
+    else:
+        actionable = 6
+    score += actionable
+    reasons.append(f"可执行性 {actionable}/15")
+
+    has_marketing_signal = contains_any(text, MARKETING_KEYWORDS)
+    if has_marketing_signal:
+        score -= 20
+        skip_reasons.append("营销/宣传信号明显")
+
+    important_signal = contains_any(text, IMPORTANT_KEYWORDS)
+    if important_signal:
+        score += 8
+        reasons.append("重要性加分 +8")
+
+    if dlen < 60:
+        score -= 12
+        skip_reasons.append("描述信息过少")
+    elif dlen < LOW_INFO_DESC_CHARS:
+        score -= 6
+        skip_reasons.append("描述信息偏少")
+
+    # 咨询流 + 信息少：默认忽略；但若事件重要，进入“合并快讯”候选
+    important_but_low_info = important_signal and dlen < LOW_INFO_DESC_CHARS
+    consult_like = source_type in {"official-content", "news", "newsletter"}
+    if consult_like and dlen < LOW_INFO_DESC_CHARS and not important_signal:
+        skip_reasons.append("资讯流且信息量不足")
+
+    score = max(0, min(100, score))
+
+    if has_marketing_signal:
+        status = "rejected"
+    elif important_but_low_info:
+        status = "brief_merge"
+    elif score >= min_selection_score and not (consult_like and dlen < LOW_INFO_DESC_CHARS):
+        status = "selected"
+    else:
+        status = "rejected"
+
+    why = "；".join(reasons[:4])
+    if status == "rejected":
+        why_not = "；".join(skip_reasons) if skip_reasons else f"总分 {score} 低于阈值 {min_selection_score}"
+    elif status == "brief_merge":
+        why_not = "重要但信息不足，合并到快讯" if not skip_reasons else "；".join(skip_reasons)
+    else:
+        why_not = ""
+
+    item["_score"] = score
+    item["_status"] = status
+    item["_why"] = why
+    item["_why_not"] = why_not
+    return item
+
+
+def select_with_diversity(candidates: list[dict], max_posts: int) -> tuple[list[dict], list[dict]]:
+    ordered = sorted(candidates, key=lambda x: (x.get("_score", 0), x.get("_ts", 0)), reverse=True)
+    selected: list[dict] = []
+    skipped_due_quota: list[dict] = []
+    used_sources: set[str] = set()
+
+    for it in ordered:
+        if it.get("_status") != "selected":
+            continue
+        src = it.get("source", "")
+        if src in used_sources:
+            continue
+        selected.append(it)
+        used_sources.add(src)
+        if len(selected) >= max_posts:
+            break
+
+    if len(selected) < max_posts:
+        selected_urls = {x.get("url") for x in selected}
+        for it in ordered:
+            if it.get("_status") != "selected":
+                continue
+            if it.get("url") in selected_urls:
+                continue
+            selected.append(it)
+            selected_urls.add(it.get("url"))
+            if len(selected) >= max_posts:
+                break
+
+    selected_urls = {x.get("url") for x in selected}
+    for it in ordered:
+        if it.get("_status") == "selected" and it.get("url") not in selected_urls:
+            it["_why_not"] = "名额限制（优先级低于本轮已入选）"
+            skipped_due_quota.append(it)
+
+    return selected, skipped_due_quota
+
+
+def build_brief_roundup_post(items: list[dict], category: str) -> tuple[dict, str]:
+    cat_name = "科技" if category == "tech" else "游戏" if category == "game" else "综合"
+    date_text = now_cn().strftime("%Y-%m-%d")
+    title = f"{date_text} {cat_name}重要快讯（信息有限）"
+
+    lines = [
+        "## 说明",
+        "以下条目具备重要性信号，但原始信息量不足，不适合单独长文，先做简短整合。",
+        "",
+        "## 今日快讯",
+    ]
+
+    for idx, it in enumerate(items, 1):
+        t = (it.get("title") or "未命名条目").strip()
+        src = (it.get("source") or "未知来源").strip()
+        url = (it.get("url") or "").strip()
+        desc = (it.get("description") or "").strip()
+        why = (it.get("_why_not") or "信息不足但重要").strip()
+        if len(desc) > 160:
+            desc = desc[:160].rstrip() + "…"
+
+        lines.append(f"### {idx}. {t}")
+        lines.append(f"- 来源：{src}")
+        lines.append(f"- 链接：{url}")
+        lines.append(f"- 入选原因：{why}")
+        if desc:
+            lines.append(f"- 已知信息：{desc}")
+        lines.append("")
+
+    meta = {
+        "title": title,
+        "title_raw": title,
+        "program": "Auto Curator",
+        "url": items[0].get("url", "") if items else "",
+        "published": now_cn().isoformat(),
+        "description": "重要但信息不足条目的合并快讯",
+        "category": category if category in {"tech", "game"} else "tech",
+        "source_type": "brief-roundup",
+    }
+    body = "\n".join(lines).strip() + "\n"
+    return meta, body
+
+
 def pick_unseen_candidates(sources: list[dict], state: dict, category: str | None = None) -> list[dict]:
     seen = set(state.get("seen_urls", []))
     candidates: list[dict] = []
@@ -427,10 +651,30 @@ def cmd_auto(args) -> int:
         return 0
 
     max_posts = max(1, int(args.max_posts))
+    min_score = int(args.min_selection_score)
+
+    if args.strict_select:
+        evaluated = [evaluate_candidate(x, min_score) for x in candidates]
+        selected_items, skipped_due_quota = select_with_diversity(evaluated, max_posts)
+        brief_pool = [x for x in evaluated if x.get("_status") == "brief_merge"]
+        rejected = [x for x in evaluated if x.get("_status") == "rejected"] + skipped_due_quota
+
+        for it in selected_items:
+            print(f"[SELECT] {it.get('url','')} | score={it.get('_score',0)} | why={it.get('_why','')}")
+
+        max_skip_report = max(0, int(args.max_skip_report))
+        if max_skip_report > 0:
+            rejected_sorted = sorted(rejected, key=lambda x: (x.get("_score", 0), x.get("_ts", 0)), reverse=True)
+            for it in rejected_sorted[:max_skip_report]:
+                print(f"[SKIP] {it.get('url','')} | score={it.get('_score',0)} | why={it.get('_why_not','未达标')}")
+    else:
+        selected_items = candidates[:max_posts]
+        brief_pool = []
+
     generated_urls: list[str] = []
     generated_count = 0
 
-    for item in candidates:
+    for item in selected_items:
         if generated_count >= max_posts:
             break
 
@@ -453,6 +697,22 @@ def cmd_auto(args) -> int:
             print(f"[WARN] generate failed: {meta.get('url')} -> {e}")
             continue
 
+    # 重要但信息不足：合并成一篇短快讯（只占一个名额）
+    if args.strict_select and brief_pool and generated_count < max_posts:
+        keep_n = max(1, int(args.max_brief_items))
+        brief_items = sorted(brief_pool, key=lambda x: (x.get("_score", 0), x.get("_ts", 0)), reverse=True)[:keep_n]
+        for it in brief_items:
+            print(f"[MERGE] {it.get('url','')} | score={it.get('_score',0)} | why={it.get('_why_not','重要但信息不足，合并快讯')}")
+
+        meta, body = build_brief_roundup_post(brief_items, category=args.category)
+        out_name = f"{now_cn().strftime('%Y-%m-%d')}-brief-{args.category}-{now_cn().strftime('%H%M%S')}.md"
+        out_path = write_post(meta, body, out_name=out_name)
+        print(f"[OK] generated: {out_path}")
+        generated_count += 1
+        for it in brief_items:
+            if it.get("url"):
+                generated_urls.append(it["url"])
+
     if generated_count == 0:
         print("[ERR] no posts generated from current candidates")
         return 4
@@ -462,6 +722,8 @@ def cmd_auto(args) -> int:
     state["last_run"] = now_cn().isoformat()
     state["last_category"] = args.category
     state["last_generated_count"] = generated_count
+    state["strict_select"] = bool(args.strict_select)
+    state["min_selection_score"] = min_score
     save_json(STATE_FILE, state)
     print(f"[OK] state updated: {STATE_FILE}")
     return 0
@@ -538,6 +800,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_auto.add_argument("--sources-file", default=str(SOURCES_FILE), help="sources config JSON")
     p_auto.add_argument("--category", default="all", choices=["all", "tech", "game"], help="Source category filter")
     p_auto.add_argument("--max-posts", type=int, default=3, help="Max posts to generate per auto run")
+    p_auto.add_argument("--strict-select", action="store_true", help="Enable strict quality selection mode")
+    p_auto.add_argument("--min-selection-score", type=int, default=DEFAULT_MIN_SELECTION_SCORE, help="Strict mode score threshold")
+    p_auto.add_argument("--max-skip-report", type=int, default=DEFAULT_MAX_SKIP_REPORT, help="Max skipped items printed with reasons")
+    p_auto.add_argument("--max-brief-items", type=int, default=DEFAULT_MAX_BRIEF_ITEMS, help="Max low-info important items merged into one brief post")
     p_auto.set_defaults(func=cmd_auto)
 
     p_check = sp.add_parser("check-sources", help="Validate source feeds from sources.json")

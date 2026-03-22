@@ -12,6 +12,10 @@ cd "$REPO_ROOT"
 python3 scripts/blog_pipeline.py auto \
   --category "$CATEGORY" \
   --max-posts "$MAX_POSTS" \
+  --strict-select \
+  --min-selection-score 70 \
+  --max-skip-report 8 \
+  --max-brief-items 5 \
   --model gpt-5.3-codex \
   --reasoning low
 

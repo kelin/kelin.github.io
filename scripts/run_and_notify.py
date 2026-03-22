@@ -57,6 +57,33 @@ def extract_generated_paths(stdout: str) -> list[str]:
     return paths
 
 
+def extract_selection_feedback(stdout: str) -> tuple[list[dict], list[dict], list[dict]]:
+    selected: list[dict] = []
+    skipped: list[dict] = []
+    merged: list[dict] = []
+
+    for line in (stdout or "").splitlines():
+        m = re.search(r"\[(SELECT|SKIP|MERGE)\]\s+(.+?)\s+\|\s+score=(\d+)\s+\|\s+why=(.+)$", line)
+        if not m:
+            continue
+
+        kind, url, score_text, why = m.groups()
+        item = {
+            "url": url.strip(),
+            "score": int(score_text),
+            "why": why.strip(),
+        }
+
+        if kind == "SELECT":
+            selected.append(item)
+        elif kind == "SKIP":
+            skipped.append(item)
+        else:
+            merged.append(item)
+
+    return selected, skipped, merged
+
+
 def is_no_new_items(stdout: str) -> bool:
     # from blog_pipeline auto mode: [OK] no new items
     return "[OK] no new items" in (stdout or "")
@@ -93,6 +120,11 @@ def build_pipeline_cmd(args) -> list[str]:
         cmd += ["--category", args.category]
         cmd += ["--sources-file", args.sources_file]
         cmd += ["--max-posts", str(args.max_posts)]
+        if args.strict_select:
+            cmd += ["--strict-select"]
+            cmd += ["--min-selection-score", str(args.min_selection_score)]
+            cmd += ["--max-skip-report", str(args.max_skip_report)]
+            cmd += ["--max-brief-items", str(args.max_brief_items)]
 
     if args.output_filename:
         cmd += ["--output-filename", args.output_filename]
@@ -269,6 +301,10 @@ def main() -> int:
     p.add_argument("--category", default="tech", choices=["all", "tech", "game"])
     p.add_argument("--sources-file", default=str(ROOT / "sources.json"))
     p.add_argument("--max-posts", type=int, default=3, help="auto mode: max posts per run")
+    p.add_argument("--strict-select", action="store_true", help="enable strict quality selection mode in auto")
+    p.add_argument("--min-selection-score", type=int, default=70, help="strict mode score threshold")
+    p.add_argument("--max-skip-report", type=int, default=8, help="strict mode: max skipped reasons from pipeline")
+    p.add_argument("--max-brief-items", type=int, default=5, help="strict mode: max low-info important items merged")
     p.add_argument("--output-filename", default="")
     p.add_argument("--max-source-chars", type=int, default=0)
 
@@ -284,6 +320,7 @@ def main() -> int:
     p.add_argument("--dry-run-notify", action="store_true", help="只打印通知内容，不实际发送")
     p.add_argument("--notify-only", action="store_true", help="仅发测试通知，不跑 pipeline")
     p.add_argument("--notify-no-new", action="store_true", help="auto 模式无新内容时也发送通知（默认不发）")
+    p.add_argument("--no-notify-skip-reasons", action="store_true", help="通知里不附带未入选原因")
 
     # git publish args
     p.add_argument("--auto-publish", action="store_true", help="生成成功后自动 git add/commit")
@@ -346,6 +383,7 @@ def main() -> int:
         return 0
 
     generated_paths = extract_generated_paths(stdout)
+    selected_fb, skipped_fb, merged_fb = extract_selection_feedback(stdout)
     site_url, baseurl = read_site_url_config()
     blog_links = [post_path_to_blog_url(p, site_url, baseurl) for p in generated_paths]
     blog_links = [x for x in blog_links if x]
@@ -353,6 +391,24 @@ def main() -> int:
     notify_lines = ["✅ Codex 已完成"]
     if generated_paths:
         notify_lines.append(f"本次生成：{len(generated_paths)} 篇")
+
+    if selected_fb:
+        notify_lines.append("为什么入选：")
+        for x in selected_fb[:5]:
+            why = x["why"][:80] + ("…" if len(x["why"]) > 80 else "")
+            notify_lines.append(f"- [{x['score']}] {why}")
+
+    if merged_fb:
+        notify_lines.append("合并快讯（重要但信息少）：")
+        for x in merged_fb[:4]:
+            why = x["why"][:80] + ("…" if len(x["why"]) > 80 else "")
+            notify_lines.append(f"- [{x['score']}] {why}")
+
+    if not args.no_notify_skip_reasons and skipped_fb:
+        notify_lines.append("为什么未入选（Top）：")
+        for x in skipped_fb[:5]:
+            why = x["why"][:80] + ("…" if len(x["why"]) > 80 else "")
+            notify_lines.append(f"- [{x['score']}] {why}")
 
     if args.auto_publish:
         ok, msg, sha, commit_url = git_publish(generated_paths, args)

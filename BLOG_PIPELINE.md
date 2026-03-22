@@ -60,10 +60,11 @@ cd /home/ubuntu/Documents/githubBlog/kelin.github.io
 行为：
 1. 读取 `sources.json`
 2. 拉取 RSS/Atom
-3. 选择“最新且未处理”的候选
+3. 严选评分（来源质量 / 信息密度 / 新颖度 / 可执行性，过滤营销噪声）
 4. 默认最多生成 3 篇（可用 `--max-posts` 调整）
-5. 写入 `_posts/YYYY-MM-DD-xxx.md`
-6. 记录到 `.blog_pipeline/state.json`
+5. 资讯流信息过少时默认忽略；若“信息少但事件重要”，会合并成一篇短快讯
+6. 写入 `_posts/YYYY-MM-DD-xxx.md`
+7. 记录到 `.blog_pipeline/state.json`
 
 ---
 
@@ -96,8 +97,8 @@ cd /home/ubuntu/Documents/githubBlog/kelin.github.io
 或者用完整命令（支持手动/自动两种模式）：
 
 ```bash
-# 自动：生成后自动提交并推送（默认最多3篇）
-python3 scripts/run_and_notify.py --mode auto --category tech --max-posts 3 --auto-publish --push
+# 自动：生成后自动提交并推送（默认最多3篇，严选模式）
+python3 scripts/run_and_notify.py --mode auto --category tech --max-posts 3 --strict-select --auto-publish --push
 
 # 手动：指定链接，生成后自动提交并推送
 python3 scripts/run_and_notify.py --mode manual --url "https://www.latent.space/p/dreamer" --category tech --auto-publish --push
@@ -117,6 +118,7 @@ python3 scripts/run_and_notify.py \
 - 成功判定：`returncode == 0`，并解析到 `[OK] generated: ...`。
 - 开启 `--auto-publish --push` 后，会自动：`git add` → `git commit` → `git push`。
 - 推送成功会在 Telegram 通知里直接附上对应博客文章链接（而不是只发 git commit 信息）。
+- Telegram 通知会附“为什么入选”，并默认附“为什么未入选（Top）”；可用 `--no-notify-skip-reasons` 关闭未入选原因。
 - 任一步失败（生成/提交/推送）都会发失败摘要。
 - auto 模式默认“无新内容不通知”；如需也通知可加 `--notify-no-new`。
 
