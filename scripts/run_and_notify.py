@@ -22,9 +22,7 @@ def load_env_file(path: Path) -> dict[str, str]:
 
     for raw in path.read_text(encoding="utf-8").splitlines():
         line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
-        if "=" not in line:
+        if not line or line.startswith("#") or "=" not in line:
             continue
 
         k, v = line.split("=", 1)
@@ -51,7 +49,6 @@ def tg_send(bot_token: str, chat_id: str, text: str, disable_preview: bool = Tru
 
 
 def extract_generated_path(stdout: str) -> str:
-    # from: [OK] generated: /path/to/post.md
     m = re.search(r"\[OK\]\s+generated:\s+(.+)", stdout)
     return m.group(1).strip() if m else ""
 
@@ -93,12 +90,123 @@ def build_pipeline_cmd(args) -> list[str]:
     return cmd
 
 
+def run_cmd(cmd: list[str], cwd: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(cmd, cwd=str(cwd), text=True, capture_output=True)
+
+
+def git_current_branch() -> str:
+    proc = run_cmd(["git", "rev-parse", "--abbrev-ref", "HEAD"], ROOT)
+    if proc.returncode != 0:
+        return "main"
+    return (proc.stdout or "").strip() or "main"
+
+
+def git_remote_url(remote: str) -> str:
+    proc = run_cmd(["git", "remote", "get-url", remote], ROOT)
+    if proc.returncode != 0:
+        return ""
+    return (proc.stdout or "").strip()
+
+
+def to_commit_url(remote_url: str, sha: str) -> str:
+    if not remote_url or not sha:
+        return ""
+
+    url = remote_url.strip()
+    if url.startswith("git@github.com:"):
+        url = "https://github.com/" + url.split(":", 1)[1]
+    if url.endswith(".git"):
+        url = url[:-4]
+
+    if "github.com" in url:
+        return f"{url}/commit/{sha}"
+    return ""
+
+
+def rel_path_for_git(path_text: str) -> str:
+    p = Path(path_text).resolve()
+    try:
+        return str(p.relative_to(ROOT))
+    except Exception:
+        return path_text
+
+
+def git_publish(generated_path: str, args) -> tuple[bool, str, str, str]:
+    # returns (ok, short_message, sha, commit_url)
+    paths_to_add: list[str] = []
+    if generated_path:
+        paths_to_add.append(rel_path_for_git(generated_path))
+
+    # auto mode usually changes state.json
+    state_path = ROOT / ".blog_pipeline" / "state.json"
+    if state_path.exists():
+        paths_to_add.append(str(state_path.relative_to(ROOT)))
+
+    # optional extra add paths
+    for x in args.extra_add:
+        x = x.strip()
+        if x:
+            paths_to_add.append(x)
+
+    # de-dup while preserving order
+    seen = set()
+    final_add: list[str] = []
+    for p in paths_to_add:
+        if p not in seen:
+            seen.add(p)
+            final_add.append(p)
+
+    if final_add:
+        add_proc = run_cmd(["git", "add", *final_add], ROOT)
+        if add_proc.returncode != 0:
+            return False, f"git add 失败: {(add_proc.stderr or '').strip()[-200:]}", "", ""
+
+    diff_proc = run_cmd(["git", "diff", "--cached", "--quiet"], ROOT)
+    if diff_proc.returncode == 0:
+        return True, "没有检测到可提交变更（可能已是最新）", "", ""
+
+    if diff_proc.returncode not in (0, 1):
+        return False, f"git diff --cached 检查失败: {(diff_proc.stderr or '').strip()[-200:]}", "", ""
+
+    msg = args.commit_message.strip()
+    if not msg:
+        if generated_path:
+            name = Path(generated_path).name
+            msg = f"feat(post): add {name}"
+        else:
+            msg = "feat(post): update generated content"
+
+    commit_proc = run_cmd(["git", "commit", "-m", msg], ROOT)
+    if commit_proc.returncode != 0:
+        return False, f"git commit 失败: {(commit_proc.stderr or '').strip()[-260:]}", "", ""
+
+    sha_proc = run_cmd(["git", "rev-parse", "HEAD"], ROOT)
+    sha = (sha_proc.stdout or "").strip() if sha_proc.returncode == 0 else ""
+
+    if args.push:
+        branch = args.branch.strip() or git_current_branch()
+        push_proc = run_cmd(["git", "push", args.remote, branch], ROOT)
+        if push_proc.returncode != 0:
+            return (
+                False,
+                f"git push 失败（{args.remote}/{branch}）: {(push_proc.stderr or '').strip()[-260:]}",
+                sha,
+                "",
+            )
+
+        remote_url = git_remote_url(args.remote)
+        commit_url = to_commit_url(remote_url, sha)
+        return True, f"已提交并推送到 {args.remote}/{branch}", sha, commit_url
+
+    return True, "已提交（未推送）", sha, ""
+
+
 def main() -> int:
     file_env = load_env_file(DEFAULT_NOTIFY_ENV_FILE)
     default_bot_token = os.getenv("TG_BOT_TOKEN", "").strip() or file_env.get("TG_BOT_TOKEN", "")
     default_chat_id = os.getenv("TG_CHAT_ID", "").strip() or file_env.get("TG_CHAT_ID", "")
 
-    p = argparse.ArgumentParser(description="Run blog pipeline, then notify Telegram when done")
+    p = argparse.ArgumentParser(description="Run blog pipeline, optionally git-publish, then notify Telegram")
     p.add_argument("--mode", choices=["manual", "auto"], required=True)
 
     # pipeline args
@@ -122,6 +230,14 @@ def main() -> int:
     p.add_argument("--notify-start", action="store_true", help="开始时也发一条通知")
     p.add_argument("--dry-run-notify", action="store_true", help="只打印通知内容，不实际发送")
     p.add_argument("--notify-only", action="store_true", help="仅发测试通知，不跑 pipeline")
+
+    # git publish args
+    p.add_argument("--auto-publish", action="store_true", help="生成成功后自动 git add/commit")
+    p.add_argument("--push", action="store_true", help="与 --auto-publish 一起使用：自动 git push")
+    p.add_argument("--remote", default="origin", help="push remote, default origin")
+    p.add_argument("--branch", default="", help="push branch, default current branch")
+    p.add_argument("--commit-message", default="", help="custom commit message")
+    p.add_argument("--extra-add", action="append", default=[], help="extra path to git add (repeatable)")
 
     args = p.parse_args()
 
@@ -150,34 +266,51 @@ def main() -> int:
     if args.notify_start:
         maybe_notify(f"🚀 开始生成文章\nmode={args.mode} category={args.category}")
 
-    proc = subprocess.run(cmd, cwd=str(ROOT), text=True, capture_output=True)
-
+    proc = run_cmd(cmd, ROOT)
     stdout = (proc.stdout or "").strip()
     stderr = (proc.stderr or "").strip()
 
-    if proc.returncode == 0:
-        out_path = extract_generated_path(stdout)
-        if out_path:
-            text = f"✅ Codex 已完成\n文件：{out_path}"
-        else:
-            text = "✅ Codex 已完成（未解析到输出文件路径，请看日志）"
-        maybe_notify(text)
+    if proc.returncode != 0:
+        fail_msg = "❌ Codex 生成失败"
+        if stderr:
+            fail_msg += f"\n错误：{stderr[-400:]}"
+        maybe_notify(fail_msg)
 
-        print(stdout)
+        if stdout:
+            print(stdout)
         if stderr:
             print(stderr, file=sys.stderr)
-        return 0
+        return proc.returncode
 
-    fail_msg = "❌ Codex 生成失败"
-    if stderr:
-        fail_msg += f"\n错误：{stderr[-400:]}"
-    maybe_notify(fail_msg)
+    out_path = extract_generated_path(stdout)
+    notify_lines = ["✅ Codex 已完成"]
+    if out_path:
+        notify_lines.append(f"文件：{out_path}")
+
+    if args.auto_publish:
+        ok, msg, sha, commit_url = git_publish(out_path, args)
+        if ok:
+            notify_lines.append(f"仓库：{msg}")
+            if sha:
+                notify_lines.append(f"commit: {sha[:12]}")
+            if commit_url:
+                notify_lines.append(f"链接：{commit_url}")
+        else:
+            notify_lines.append(f"仓库操作失败：{msg}")
+            maybe_notify("\n".join(notify_lines))
+            if stdout:
+                print(stdout)
+            if stderr:
+                print(stderr, file=sys.stderr)
+            return 4
+
+    maybe_notify("\n".join(notify_lines))
 
     if stdout:
         print(stdout)
     if stderr:
         print(stderr, file=sys.stderr)
-    return proc.returncode
+    return 0
 
 
 if __name__ == "__main__":

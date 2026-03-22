@@ -2,7 +2,8 @@
 set -euo pipefail
 
 # usage:
-#   TG_BOT_TOKEN=xxx TG_CHAT_ID=yyy ./scripts/auto_post_notify.sh tech
+#   ./scripts/auto_post_notify.sh tech
+# default behavior: generate 1 post + notify telegram + git add/commit/push
 
 CATEGORY="${1:-tech}"  # all|tech|game
 
@@ -15,4 +16,6 @@ python3 scripts/run_and_notify.py \
   --mode auto \
   --category "$CATEGORY" \
   --model gpt-5.3-codex \
-  --reasoning low
+  --reasoning low \
+  --auto-publish \
+  --push

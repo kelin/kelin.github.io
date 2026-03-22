@@ -78,7 +78,7 @@ EOF
 chmod 600 .blog_pipeline/notify.env
 ```
 
-然后运行：
+然后运行（默认：生成 + 通知 + git add/commit/push）：
 
 ```bash
 cd /home/ubuntu/Documents/githubBlog/kelin.github.io
@@ -88,8 +88,11 @@ cd /home/ubuntu/Documents/githubBlog/kelin.github.io
 或者用完整命令（支持手动/自动两种模式）：
 
 ```bash
-python3 scripts/run_and_notify.py --mode auto --category tech
-python3 scripts/run_and_notify.py --mode manual --url "https://www.latent.space/p/dreamer" --category tech
+# 自动：生成后自动提交并推送
+python3 scripts/run_and_notify.py --mode auto --category tech --auto-publish --push
+
+# 手动：指定链接，生成后自动提交并推送
+python3 scripts/run_and_notify.py --mode manual --url "https://www.latent.space/p/dreamer" --category tech --auto-publish --push
 ```
 
 如果你想指定**另一个 bot**，直接临时覆盖参数即可：
@@ -104,7 +107,9 @@ python3 scripts/run_and_notify.py \
 说明：
 - 脚本通过 `subprocess.run(...)` 阻塞等待 `codex exec` 结束。
 - 成功判定：`returncode == 0`，并解析到 `[OK] generated: ...`。
-- 成功后发送 “✅ 已完成 + 文件路径”；失败后发送错误摘要。
+- 开启 `--auto-publish --push` 后，会自动：`git add` → `git commit` → `git push`。
+- 推送成功会在 Telegram 通知里附上 commit 短 SHA 和 commit 链接（GitHub remote 时自动拼接）。
+- 任一步失败（生成/提交/推送）都会发失败摘要。
 
 ---
 
