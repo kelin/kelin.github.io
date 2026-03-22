@@ -4,14 +4,14 @@ title: Archives
 permalink: /archives/
 ---
 
-按月份归档：
+按日归档：
 
-{% assign prev_month = "" %}
+{% assign prev_day = "" %}
 {% for post in site.posts %}
-{% assign m = post.date | date: "%Y-%m" %}
-{% if m != prev_month %}
-<h3 id="m-{{ m }}">{{ m }}</h3>
-{% assign prev_month = m %}
+{% assign d = post.date | date: "%Y-%m-%d" %}
+{% if d != prev_day %}
+### {{ d }}
+{% assign prev_day = d %}
 {% endif %}
-- [{{ post.title }}]({{ post.url | relative_url }})（{{ post.date | date: "%m-%d" }}）
+- [{{ post.title }}]({{ post.url | relative_url }})
 {% endfor %}

@@ -13,17 +13,17 @@ permalink: /
       <li><a href="{{ '/archives/' | relative_url }}">按日期归档（Archives）</a></li>
     </ul>
 
-    <h3>按月份</h3>
+    <h3>最近日期</h3>
     <ul class="month-list">
-      {% assign prev_month = "" %}
+      {% assign prev_day = "" %}
       {% assign shown = 0 %}
       {% for post in site.posts %}
-        {% assign m = post.date | date: "%Y-%m" %}
-        {% if m != prev_month and shown < 12 %}
+        {% assign d = post.date | date: "%Y-%m-%d" %}
+        {% if d != prev_day and shown < 20 %}
           <li>
-            <a href="{{ '/archives/#m-' | append: m | relative_url }}">{{ m }}</a>
+            <a href="{{ '/archives/' | relative_url }}">{{ d }}</a>
           </li>
-          {% assign prev_month = m %}
+          {% assign prev_day = d %}
           {% assign shown = shown | plus: 1 %}
         {% endif %}
       {% endfor %}
