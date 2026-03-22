@@ -12,11 +12,11 @@ from urllib.parse import urlparse
 
 from pipeline_brief import (
     DAILY_BRIEF_ARXIV_FEED,
-    DAILY_BRIEF_GITHUB_PY_URL,
-    DAILY_BRIEF_HF_URL,
     DAILY_BRIEF_HN_FEED,
     build_brief_roundup_post,
     build_daily_brief_prompt,
+    fetch_github_trending_python,
+    fetch_hf_trending_models,
     top_feed_items_for_brief,
 )
 from pipeline_common import (
@@ -25,7 +25,6 @@ from pipeline_common import (
     SOURCES_FILE,
     STATE_FILE,
     build_prompt,
-    fetch_snapshot_text,
     fetch_url_text,
     load_json,
     now_cn,
@@ -190,8 +189,8 @@ def cmd_daily_brief(args) -> int:
 
     hn_items: list[dict] = []
     arxiv_items: list[dict] = []
-    hf_text = ""
-    gh_py_text = ""
+    hf_items: list[dict] = []
+    gh_py_items: list[dict] = []
 
     try:
         hn_items = top_feed_items_for_brief(DAILY_BRIEF_HN_FEED, "Hacker News", max_items=10)
@@ -204,16 +203,16 @@ def cmd_daily_brief(args) -> int:
         print(f"[WARN] daily brief arXiv fetch failed: {e}")
 
     try:
-        hf_text = fetch_snapshot_text(DAILY_BRIEF_HF_URL, max_chars=7000)
+        hf_items = fetch_hf_trending_models(max_items=10)
     except Exception as e:
         print(f"[WARN] daily brief HF fetch failed: {e}")
 
     try:
-        gh_py_text = fetch_snapshot_text(DAILY_BRIEF_GITHUB_PY_URL, max_chars=7000)
+        gh_py_items = fetch_github_trending_python(max_items=10)
     except Exception as e:
         print(f"[WARN] daily brief GitHub trending fetch failed: {e}")
 
-    if not rejected_pool and not hn_items and not arxiv_items and not hf_text and not gh_py_text:
+    if not rejected_pool and not hn_items and not arxiv_items and not hf_items and not gh_py_items:
         print("[ERR] daily brief has no source material")
         return 4
 
@@ -222,8 +221,8 @@ def cmd_daily_brief(args) -> int:
         rejected_pool=rejected_pool,
         hn_items=hn_items,
         arxiv_items=arxiv_items,
-        hf_text=hf_text,
-        gh_py_text=gh_py_text,
+        hf_items=hf_items,
+        gh_py_items=gh_py_items,
     )
 
     body = run_codex(prompt=prompt, model=args.model, reasoning=args.reasoning)
