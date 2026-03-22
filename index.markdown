@@ -14,13 +14,18 @@ permalink: /
     </ul>
 
     <h3>按月份</h3>
-    {% assign posts_by_month = site.posts | group_by_exp: "post", "post.date | date: '%Y-%m'" %}
     <ul class="month-list">
-      {% for month in posts_by_month limit: 12 %}
-      <li>
-        <a href="{{ '/archives/#m-' | append: month.name | relative_url }}">{{ month.name }}</a>
-        <small>（{{ month.items | size }}）</small>
-      </li>
+      {% assign prev_month = "" %}
+      {% assign shown = 0 %}
+      {% for post in site.posts %}
+        {% assign m = post.date | date: "%Y-%m" %}
+        {% if m != prev_month and shown < 12 %}
+          <li>
+            <a href="{{ '/archives/#m-' | append: m | relative_url }}">{{ m }}</a>
+          </li>
+          {% assign prev_month = m %}
+          {% assign shown = shown | plus: 1 %}
+        {% endif %}
       {% endfor %}
     </ul>
   </aside>
