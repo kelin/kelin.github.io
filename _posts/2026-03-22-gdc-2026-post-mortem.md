@@ -1,5 +1,5 @@
 ---
-title: "GDC 2026 POST-MORTEM｜内容总结"
+title: "GDC 2026 复盘｜内容总结"
 date: "2026-03-22 22:38:37 +0800"
 source_program: "Deconstructor of Fun"
 source_episode: "GDC 2026 POST-MORTEM"

@@ -1,5 +1,5 @@
 ---
-title: "METR’s Joel Becker on exponential Time Horizon Evals, Threat Models, and the Limits of AI Productivity｜内容总结"
+title: "METR 的 Joel Becker 谈指数级时间跨度评测、威胁模型与 AI 生产力的边界｜内容总结"
 date: "2026-03-23 01:06:50 +0800"
 source_program: "Latent Space"
 source_episode: "METR’s Joel Becker on exponential Time Horizon Evals, Threat Models, and the Limits of AI Productivity"

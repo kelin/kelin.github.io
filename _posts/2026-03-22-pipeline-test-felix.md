@@ -1,5 +1,5 @@
 ---
-title: "Why Anthropic Thinks AI Should Have Its Own Computer｜内容总结"
+title: "为什么 Anthropic 认为 AI 应该拥有自己的电脑｜内容总结"
 date: "2026-03-22 20:35:56 +0800"
 source_program: "Latent Space"
 source_episode: "Why Anthropic Thinks AI Should Have Its Own Computer"

@@ -256,7 +256,8 @@ def translate_title_to_zh(title: str, model: str) -> str:
         f"原始标题：{t}"
     )
     try:
-        out = run_codex(prompt=prompt, model=model, reasoning="minimal")
+        # 注意：minimal 在当前工具配置下可能触发 provider 对 tools 的限制报错，改为 low 保稳。
+        out = run_codex(prompt=prompt, model=model, reasoning="low")
         line = out.splitlines()[0].strip()
         return line or t
     except Exception:

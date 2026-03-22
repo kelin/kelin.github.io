@@ -1,5 +1,5 @@
 ---
-title: "Profiling Hacker News users based on their comments｜内容总结"
+title: "基于评论对 Hacker News 用户进行画像｜内容总结"
 date: "2026-03-22 19:46:52 +0800"
 source_program: "Simon Willison"
 source_episode: "Profiling Hacker News users based on their comments"

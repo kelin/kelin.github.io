@@ -1,5 +1,5 @@
 ---
-title: "Dreamer: the Personal Agent OS — David Singleton｜内容总结"
+title: "Dreamer：个人智能体操作系统 — David Singleton｜内容总结"
 date: "2026-03-22 22:36:35 +0800"
 source_program: "Latent Space"
 source_episode: "Dreamer: the Personal Agent OS — David Singleton"
