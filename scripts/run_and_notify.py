@@ -116,7 +116,7 @@ def build_pipeline_cmd(args) -> list[str]:
             cmd += ["--source-file", args.source_file]
         if args.category:
             cmd += ["--category", args.category]
-    else:
+    elif args.mode == "auto":
         cmd += ["--category", args.category]
         cmd += ["--sources-file", args.sources_file]
         cmd += ["--max-posts", str(args.max_posts)]
@@ -125,6 +125,8 @@ def build_pipeline_cmd(args) -> list[str]:
             cmd += ["--min-selection-score", str(args.min_selection_score)]
             cmd += ["--max-skip-report", str(args.max_skip_report)]
             cmd += ["--max-brief-items", str(args.max_brief_items)]
+    elif args.mode == "daily-brief":
+        pass
 
     if args.output_filename:
         cmd += ["--output-filename", args.output_filename]
@@ -290,7 +292,7 @@ def main() -> int:
     default_chat_id = os.getenv("TG_CHAT_ID", "").strip() or file_env.get("TG_CHAT_ID", "")
 
     p = argparse.ArgumentParser(description="Run blog pipeline, optionally git-publish, then notify Telegram")
-    p.add_argument("--mode", choices=["manual", "auto"], required=True)
+    p.add_argument("--mode", choices=["manual", "auto", "daily-brief"], required=True)
 
     # pipeline args
     p.add_argument("--url", default="")

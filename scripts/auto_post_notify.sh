@@ -2,11 +2,11 @@
 set -euo pipefail
 
 # usage:
-#   ./scripts/auto_post_notify.sh tech 3
-# default behavior: generate up to N posts + notify telegram + git add/commit/push
+#   ./scripts/auto_post_notify.sh tech 0
+# default behavior: strict select + notify telegram + git add/commit/push
 
 CATEGORY="${1:-tech}"  # all|tech|game
-MAX_POSTS="${2:-3}"
+MAX_POSTS="${2:-0}"    # 0 表示不限制篇数
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"

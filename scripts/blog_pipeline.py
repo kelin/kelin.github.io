@@ -72,6 +72,12 @@ NOVELTY_KEYWORDS = [
     "发布", "开源", "更新", "首发", "新", "论文",
 ]
 
+SLOW_FEED_INTERVAL_DAYS = 5
+DAILY_BRIEF_HN_FEED = "https://hnrss.org/frontpage"
+DAILY_BRIEF_ARXIV_FEED = "https://export.arxiv.org/rss/cs.AI"
+DAILY_BRIEF_HF_URL = "https://huggingface.co/models?sort=trending"
+DAILY_BRIEF_GITHUB_PY_URL = "https://github.com/trending/python?since=daily"
+
 
 # -------------------- helpers --------------------
 
@@ -383,6 +389,30 @@ def source_quality_score(source_name: str) -> tuple[int, str]:
     return 16, "常规来源"
 
 
+def is_slow_source(source_cfg: dict, items: list[dict]) -> bool:
+    dates: list[dt.datetime] = []
+    for it in items:
+        d = parse_date(it.get("published", ""))
+        if d:
+            dates.append(d)
+
+    if len(dates) < 2:
+        return False
+
+    dates.sort(reverse=True)
+    gaps: list[float] = []
+    for i in range(len(dates) - 1):
+        delta = (dates[i] - dates[i + 1]).total_seconds() / 86400.0
+        if delta > 0:
+            gaps.append(delta)
+
+    if not gaps:
+        return False
+
+    avg_gap = sum(gaps) / len(gaps)
+    return avg_gap >= SLOW_FEED_INTERVAL_DAYS
+
+
 def evaluate_candidate(item: dict, min_selection_score: int) -> dict:
     title = (item.get("title") or "").strip()
     desc = (item.get("description") or "").strip()
@@ -449,12 +479,18 @@ def evaluate_candidate(item: dict, min_selection_score: int) -> dict:
     if consult_like and dlen < LOW_INFO_DESC_CHARS and not important_signal:
         skip_reasons.append("资讯流且信息量不足")
 
+    if item.get("_slow_source"):
+        score = min(100, score + 12)
+        reasons.append("低频源优先 +12")
+
     score = max(0, min(100, score))
 
     if has_marketing_signal:
         status = "rejected"
     elif important_but_low_info:
         status = "brief_merge"
+    elif item.get("_slow_source"):
+        status = "selected"
     elif score >= min_selection_score and not (consult_like and dlen < LOW_INFO_DESC_CHARS):
         status = "selected"
     else:
@@ -472,6 +508,8 @@ def evaluate_candidate(item: dict, min_selection_score: int) -> dict:
     item["_status"] = status
     item["_why"] = why
     item["_why_not"] = why_not
+    item["_important"] = important_signal
+    item["_consult_like"] = consult_like
     return item
 
 
@@ -556,6 +594,120 @@ def build_brief_roundup_post(items: list[dict], category: str) -> tuple[dict, st
     return meta, body
 
 
+def update_daily_brief_pool(state: dict, rejected_items: list[dict]) -> None:
+    if not rejected_items:
+        return
+
+    day_key = now_cn().strftime("%Y-%m-%d")
+    pool = state.get("daily_brief_pool", {})
+    day_items = pool.get(day_key, [])
+
+    merged = list(day_items)
+    for it in rejected_items:
+        if it.get("_score", 0) < 60 and not it.get("_important"):
+            continue
+        merged.append(
+            {
+                "title": it.get("title", ""),
+                "url": it.get("url", ""),
+                "source": it.get("source", ""),
+                "description": it.get("description", ""),
+                "score": it.get("_score", 0),
+                "why_not": it.get("_why_not", ""),
+                "ts": it.get("_ts", 0),
+            }
+        )
+
+    dedup: list[dict] = []
+    seen = set()
+    for x in sorted(merged, key=lambda z: (z.get("score", 0), z.get("ts", 0)), reverse=True):
+        u = (x.get("url") or "").strip()
+        if not u or u in seen:
+            continue
+        seen.add(u)
+        dedup.append(x)
+
+    pool[day_key] = dedup[:80]
+    # 仅保留最近3天
+    keys = sorted(pool.keys())
+    for k in keys[:-3]:
+        pool.pop(k, None)
+
+    state["daily_brief_pool"] = pool
+
+
+def get_daily_brief_pool_items(state: dict, day_key: str) -> list[dict]:
+    pool = state.get("daily_brief_pool", {})
+    items = pool.get(day_key, [])
+    if not isinstance(items, list):
+        return []
+    return items
+
+
+def top_feed_items_for_brief(feed_url: str, source_name: str, max_items: int = 8) -> list[dict]:
+    src = {
+        "name": source_name,
+        "feed": feed_url,
+        "category": "tech",
+        "type": "news",
+        "max_items": max_items,
+        "enabled": True,
+    }
+    items = feed_items(src)
+    return items[:max_items]
+
+
+def fetch_snapshot_text(url: str, max_chars: int = 7000) -> str:
+    title, text = fetch_url_text(url)
+    merged = f"TITLE: {title}\n\n{text}".strip()
+    return merged[:max_chars]
+
+
+def build_daily_brief_prompt(day_key: str, rejected_pool: list[dict], hn_items: list[dict], arxiv_items: list[dict], hf_text: str, gh_py_text: str) -> str:
+    lines: list[str] = []
+    lines.append(f"你是信息策展编辑。请写一篇 {day_key} 的‘每日快讯’中文短文，面向 AI/游戏开发者。")
+    lines.append("要求：")
+    lines.append("1) 短、准、可执行；不要营销语。")
+    lines.append(f"2) 标题固定：{day_key} 每日快讯。")
+    lines.append("3) 必须包含两个部分：")
+    lines.append("   - 主文落选但值得关注（从给定 rejected pool 里选）")
+    lines.append("   - 外部信源精选（HN/arXiv/HuggingFace/GitHub Trending Python）")
+    lines.append("4) 每条给一句‘为什么值得看’和原链接。")
+    lines.append("5) 不确定就写‘源信息不足’。不编造。")
+    lines.append("")
+
+    lines.append("[主文落选池]")
+    if rejected_pool:
+        for i, x in enumerate(rejected_pool[:20], 1):
+            lines.append(
+                f"{i}. {x.get('title','')} | {x.get('source','')} | score={x.get('score',0)} | why_not={x.get('why_not','')} | url={x.get('url','')}"
+            )
+    else:
+        lines.append("(empty)")
+
+    lines.append("")
+    lines.append("[Hacker News Front Page]")
+    for i, x in enumerate(hn_items[:10], 1):
+        lines.append(f"{i}. {x.get('title','')} | {x.get('url','')}")
+
+    lines.append("")
+    lines.append("[arXiv cs.AI]")
+    for i, x in enumerate(arxiv_items[:10], 1):
+        lines.append(f"{i}. {x.get('title','')} | {x.get('url','')}")
+
+    lines.append("")
+    lines.append("[HuggingFace Trending Models 页面文本截断]")
+    lines.append(hf_text[:4500] if hf_text else "(fetch failed)")
+
+    lines.append("")
+    lines.append("[GitHub Trending Python 页面文本截断]")
+    lines.append(gh_py_text[:4500] if gh_py_text else "(fetch failed)")
+
+    lines.append("")
+    lines.append("输出 Markdown，不要 front matter。")
+    return "\n".join(lines)
+
+
 def pick_unseen_candidates(sources: list[dict], state: dict, category: str | None = None) -> list[dict]:
     seen = set(state.get("seen_urls", []))
     candidates: list[dict] = []
@@ -579,6 +731,8 @@ def pick_unseen_candidates(sources: list[dict], state: dict, category: str | Non
             print(f"[WARN] feed failed: {name} -> {e}")
             continue
 
+        slow_source = is_slow_source(s, items)
+
         for it in items:
             url = (it.get("url") or "").strip()
             if not url or url in seen:
@@ -587,6 +741,8 @@ def pick_unseen_candidates(sources: list[dict], state: dict, category: str | Non
             pub = parse_date(it.get("published", ""))
             ts = pub.timestamp() if pub else 0
             it["_ts"] = ts
+            it["_slow_source"] = slow_source
+            it["_source_name"] = name
             candidates.append(it)
 
     candidates.sort(key=lambda x: x.get("_ts", 0), reverse=True)
@@ -650,14 +806,19 @@ def cmd_auto(args) -> int:
         print("[OK] no new items")
         return 0
 
-    max_posts = max(1, int(args.max_posts))
+    max_posts_arg = int(args.max_posts)
+    max_posts = len(candidates) if max_posts_arg <= 0 else max(1, max_posts_arg)
     min_score = int(args.min_selection_score)
+
+    rejected: list[dict] = []
 
     if args.strict_select:
         evaluated = [evaluate_candidate(x, min_score) for x in candidates]
         selected_items, skipped_due_quota = select_with_diversity(evaluated, max_posts)
         brief_pool = [x for x in evaluated if x.get("_status") == "brief_merge"]
         rejected = [x for x in evaluated if x.get("_status") == "rejected"] + skipped_due_quota
+
+        update_daily_brief_pool(state, rejected)
 
         for it in selected_items:
             print(f"[SELECT] {it.get('url','')} | score={it.get('_score',0)} | why={it.get('_why','')}")
@@ -724,6 +885,75 @@ def cmd_auto(args) -> int:
     state["last_generated_count"] = generated_count
     state["strict_select"] = bool(args.strict_select)
     state["min_selection_score"] = min_score
+    save_json(STATE_FILE, state)
+    print(f"[OK] state updated: {STATE_FILE}")
+    return 0
+
+
+def cmd_daily_brief(args) -> int:
+    state = load_json(STATE_FILE, default={"seen_urls": []})
+    day_key = now_cn().strftime("%Y-%m-%d")
+
+    rejected_pool = get_daily_brief_pool_items(state, day_key)
+
+    hn_items: list[dict] = []
+    arxiv_items: list[dict] = []
+    hf_text = ""
+    gh_py_text = ""
+
+    try:
+        hn_items = top_feed_items_for_brief(DAILY_BRIEF_HN_FEED, "Hacker News", max_items=10)
+    except Exception as e:
+        print(f"[WARN] daily brief HN fetch failed: {e}")
+
+    try:
+        arxiv_items = top_feed_items_for_brief(DAILY_BRIEF_ARXIV_FEED, "arXiv cs.AI", max_items=10)
+    except Exception as e:
+        print(f"[WARN] daily brief arXiv fetch failed: {e}")
+
+    try:
+        hf_text = fetch_snapshot_text(DAILY_BRIEF_HF_URL, max_chars=7000)
+    except Exception as e:
+        print(f"[WARN] daily brief HF fetch failed: {e}")
+
+    try:
+        gh_py_text = fetch_snapshot_text(DAILY_BRIEF_GITHUB_PY_URL, max_chars=7000)
+    except Exception as e:
+        print(f"[WARN] daily brief GitHub trending fetch failed: {e}")
+
+    if not rejected_pool and not hn_items and not arxiv_items and not hf_text and not gh_py_text:
+        print("[ERR] daily brief has no source material")
+        return 4
+
+    prompt = build_daily_brief_prompt(
+        day_key=day_key,
+        rejected_pool=rejected_pool,
+        hn_items=hn_items,
+        arxiv_items=arxiv_items,
+        hf_text=hf_text,
+        gh_py_text=gh_py_text,
+    )
+
+    body = run_codex(prompt=prompt, model=args.model, reasoning=args.reasoning)
+
+    title = f"{day_key} 每日快讯"
+    meta = {
+        "title": title,
+        "title_raw": title,
+        "program": "Auto Curator Daily Brief",
+        "url": "https://hnrss.org/frontpage",
+        "published": now_cn().isoformat(),
+        "description": "主文落选重点 + HN/arXiv/HF/GitHub Daily Brief",
+        "category": "tech",
+        "source_type": "daily-brief",
+    }
+
+    out_name = args.output_filename or f"{day_key}-daily-brief.md"
+    out_path = write_post(meta, body, out_name=out_name)
+    print(f"[OK] generated: {out_path}")
+
+    state["last_daily_brief"] = now_cn().isoformat()
+    state["last_daily_brief_file"] = str(out_path)
     save_json(STATE_FILE, state)
     print(f"[OK] state updated: {STATE_FILE}")
     return 0
@@ -805,6 +1035,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_auto.add_argument("--max-skip-report", type=int, default=DEFAULT_MAX_SKIP_REPORT, help="Max skipped items printed with reasons")
     p_auto.add_argument("--max-brief-items", type=int, default=DEFAULT_MAX_BRIEF_ITEMS, help="Max low-info important items merged into one brief post")
     p_auto.set_defaults(func=cmd_auto)
+
+    p_daily = sp.add_parser("daily-brief", parents=[common], help="Generate one daily brief post")
+    p_daily.set_defaults(func=cmd_daily_brief)
 
     p_check = sp.add_parser("check-sources", help="Validate source feeds from sources.json")
     p_check.add_argument("--sources-file", default=str(SOURCES_FILE), help="sources config JSON")

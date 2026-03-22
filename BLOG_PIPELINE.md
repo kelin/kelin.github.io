@@ -10,6 +10,9 @@
 - `tech`：科技圈（AI/工程/产品）
 - `game`：游戏圈（设计/开发/行业）
 
+并新增：
+- `daily-brief`：每日快讯（主文落选重点 + HN/arXiv/HF/GitHub Trending）
+
 ---
 
 ## 文件结构
@@ -19,6 +22,7 @@
 - `scripts/auto_post.sh` 自动快捷命令
 - `scripts/run_and_notify.py` 运行后发送 Telegram 通知
 - `scripts/auto_post_notify.sh` 自动模式 + Telegram 通知快捷命令
+- `scripts/daily_brief_notify.sh` 每日快讯 + Telegram 通知快捷命令
 - `sources.json` 自动模式信源列表（含 category/type）
 - `prompts/post_prompt.md` **Codex 提示词模板（可独立修改）**
 - `.blog_pipeline/state.json` 自动模式去重状态（运行后生成）
@@ -52,9 +56,10 @@ cd /home/ubuntu/Documents/githubBlog/kelin.github.io
 
 ```bash
 cd /home/ubuntu/Documents/githubBlog/kelin.github.io
-./scripts/auto_post.sh           # all
+./scripts/auto_post.sh           # all（默认不限制篇数）
 ./scripts/auto_post.sh tech      # 仅科技圈
 ./scripts/auto_post.sh game      # 仅游戏圈
+./scripts/auto_post.sh tech 5    # 限制本轮最多5篇
 ```
 
 行为：
@@ -65,6 +70,22 @@ cd /home/ubuntu/Documents/githubBlog/kelin.github.io
 5. 资讯流信息过少时默认忽略；若“信息少但事件重要”，会合并成一篇短快讯
 6. 写入 `_posts/YYYY-MM-DD-xxx.md`
 7. 记录到 `.blog_pipeline/state.json`
+
+---
+
+## 每日快讯（daily-brief）
+
+```bash
+cd /home/ubuntu/Documents/githubBlog/kelin.github.io
+./scripts/daily_brief_notify.sh
+```
+
+快讯内容来源：
+1) 主文落选但相对重要的信息（来自当天严选落选池）
+2) Hacker News Front Page
+3) arXiv cs.AI 最新
+4) HuggingFace Trending Models
+5) GitHub Trending Python
 
 ---
 
@@ -97,8 +118,8 @@ cd /home/ubuntu/Documents/githubBlog/kelin.github.io
 或者用完整命令（支持手动/自动两种模式）：
 
 ```bash
-# 自动：生成后自动提交并推送（默认最多3篇，严选模式）
-python3 scripts/run_and_notify.py --mode auto --category tech --max-posts 3 --strict-select --auto-publish --push
+# 自动：生成后自动提交并推送（严选模式；max-posts=0 不限制）
+python3 scripts/run_and_notify.py --mode auto --category tech --max-posts 0 --strict-select --auto-publish --push
 
 # 手动：指定链接，生成后自动提交并推送
 python3 scripts/run_and_notify.py --mode manual --url "https://www.latent.space/p/dreamer" --category tech --auto-publish --push
@@ -184,6 +205,7 @@ crontab -l
 
 - 模型：`gpt-5.3-codex`
 - 推理：`low`（优先省 token）
-- 自动模式默认每次最多 **3 篇**（可调）
+- 自动模式默认 `--max-posts=0`（不限制篇数，可手动传参限制）
+- 严选模式默认开启（评分筛选 + 低信息重要项合并快讯）
 - 英文原始标题会自动翻译成中文作为博客标题（source_episode 保留原文标题）
 - 文章结构由 `prompts/post_prompt.md` 控制

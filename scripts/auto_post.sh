@@ -2,7 +2,7 @@
 set -euo pipefail
 
 CATEGORY="${1:-all}"   # all|tech|game
-MAX_POSTS="${2:-3}"    # 每次最多生成篇数
+MAX_POSTS="${2:-0}"    # 0 表示不限制篇数
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
