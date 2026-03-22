@@ -18,7 +18,7 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: Li Cola · AI & Game Notes
+title: AI & Game Notes
 email: 
 description: >- # this means to ignore newlines until "baseurl:"
   AI / 科技 / 游戏开发内容总结与个人思考
@@ -31,6 +31,7 @@ github_username:  kelin
 header_pages:
   - tech.markdown
   - game.markdown
+  - archives.markdown
   - about.markdown
 
 # Build settings

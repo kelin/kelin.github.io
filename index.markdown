@@ -1,6 +1,39 @@
 ---
-# Feel free to add content and custom Front Matter to this file.
-# To modify the layout, see https://jekyllrb.com/docs/themes/#overriding-theme-defaults
-
-layout: home
+layout: page
+title: Home
+permalink: /
 ---
+
+<div class="home-grid">
+  <aside class="home-sidebar">
+    <h3>目录</h3>
+    <ul>
+      <li><a href="{{ '/tech/' | relative_url }}">科技（Tech）</a></li>
+      <li><a href="{{ '/game/' | relative_url }}">游戏（Game）</a></li>
+      <li><a href="{{ '/archives/' | relative_url }}">按日期归档（Archives）</a></li>
+    </ul>
+
+    <h3>按月份</h3>
+    {% assign posts_by_month = site.posts | group_by_exp: "post", "post.date | date: '%Y-%m'" %}
+    <ul class="month-list">
+      {% for month in posts_by_month limit: 12 %}
+      <li>
+        <a href="{{ '/archives/#m-' | append: month.name | relative_url }}">{{ month.name }}</a>
+        <small>（{{ month.items | size }}）</small>
+      </li>
+      {% endfor %}
+    </ul>
+  </aside>
+
+  <section class="home-main">
+    <h2>最新文章</h2>
+    <ul>
+      {% for post in site.posts limit: 30 %}
+      <li>
+        <a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a>
+        <small>（{{ post.date | date: "%Y-%m-%d" }}）</small>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>

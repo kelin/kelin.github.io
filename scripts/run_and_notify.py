@@ -48,9 +48,13 @@ def tg_send(bot_token: str, chat_id: str, text: str, disable_preview: bool = Tru
         _ = resp.read()
 
 
-def extract_generated_path(stdout: str) -> str:
-    m = re.search(r"\[OK\]\s+generated:\s+(.+)", stdout)
-    return m.group(1).strip() if m else ""
+def extract_generated_paths(stdout: str) -> list[str]:
+    paths: list[str] = []
+    for line in (stdout or "").splitlines():
+        m = re.search(r"\[OK\]\s+generated:\s+(.+)", line)
+        if m:
+            paths.append(m.group(1).strip())
+    return paths
 
 
 def is_no_new_items(stdout: str) -> bool:
@@ -88,6 +92,7 @@ def build_pipeline_cmd(args) -> list[str]:
     else:
         cmd += ["--category", args.category]
         cmd += ["--sources-file", args.sources_file]
+        cmd += ["--max-posts", str(args.max_posts)]
 
     if args.output_filename:
         cmd += ["--output-filename", args.output_filename]
@@ -138,11 +143,12 @@ def rel_path_for_git(path_text: str) -> str:
         return path_text
 
 
-def git_publish(generated_path: str, args) -> tuple[bool, str, str, str]:
+def git_publish(generated_paths: list[str], args) -> tuple[bool, str, str, str]:
     # returns (ok, short_message, sha, commit_url)
     paths_to_add: list[str] = []
-    if generated_path:
-        paths_to_add.append(rel_path_for_git(generated_path))
+    for generated_path in generated_paths:
+        if generated_path:
+            paths_to_add.append(rel_path_for_git(generated_path))
 
     # auto mode usually changes state.json
     state_path = ROOT / ".blog_pipeline" / "state.json"
@@ -177,9 +183,11 @@ def git_publish(generated_path: str, args) -> tuple[bool, str, str, str]:
 
     msg = args.commit_message.strip()
     if not msg:
-        if generated_path:
-            name = Path(generated_path).name
+        if len(generated_paths) == 1:
+            name = Path(generated_paths[0]).name
             msg = f"feat(post): add {name}"
+        elif len(generated_paths) > 1:
+            msg = f"feat(post): add {len(generated_paths)} generated posts"
         else:
             msg = "feat(post): update generated content"
 
@@ -224,6 +232,7 @@ def main() -> int:
     p.add_argument("--source-file", default="", help="manual mode: use local txt/md as source text (skip URL fetch)")
     p.add_argument("--category", default="tech", choices=["all", "tech", "game"])
     p.add_argument("--sources-file", default=str(ROOT / "sources.json"))
+    p.add_argument("--max-posts", type=int, default=3, help="auto mode: max posts per run")
     p.add_argument("--output-filename", default="")
     p.add_argument("--max-source-chars", type=int, default=0)
 
@@ -300,13 +309,15 @@ def main() -> int:
             print(stderr, file=sys.stderr)
         return 0
 
-    out_path = extract_generated_path(stdout)
+    generated_paths = extract_generated_paths(stdout)
     notify_lines = ["✅ Codex 已完成"]
-    if out_path:
-        notify_lines.append(f"文件：{out_path}")
+    if generated_paths:
+        notify_lines.append(f"本次生成：{len(generated_paths)} 篇")
+        for p in generated_paths[:5]:
+            notify_lines.append(f"- {p}")
 
     if args.auto_publish:
-        ok, msg, sha, commit_url = git_publish(out_path, args)
+        ok, msg, sha, commit_url = git_publish(generated_paths, args)
         if ok:
             notify_lines.append(f"仓库：{msg}")
             if sha:

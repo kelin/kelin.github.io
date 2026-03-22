@@ -1,0 +1,45 @@
+---
+---
+
+@import "minima";
+
+.home-grid {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+}
+
+.home-sidebar {
+  position: sticky;
+  top: 20px;
+  align-self: start;
+  padding: 16px;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.home-sidebar h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+
+.home-sidebar ul {
+  margin: 0 0 16px 18px;
+  padding: 0;
+}
+
+.home-main h2 {
+  margin-top: 0;
+}
+
+@media (max-width: 800px) {
+  .home-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-sidebar {
+    position: static;
+  }
+}

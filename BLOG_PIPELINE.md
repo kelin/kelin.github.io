@@ -3,7 +3,7 @@
 支持两种模式：
 
 - **手动模式**：输入一个链接，生成一篇（单文件）
-- **自动模式**：从 `sources.json` 里抓新内容，每次只生成一篇（单文件）
+- **自动模式**：从 `sources.json` 里抓新内容，每次可生成多篇（默认最多 3 篇，单篇单文件）
 
 并支持按圈层分类：
 
@@ -60,9 +60,10 @@ cd /home/ubuntu/Documents/githubBlog/kelin.github.io
 行为：
 1. 读取 `sources.json`
 2. 拉取 RSS/Atom
-3. 选择“最新且未处理”的 1 条
-4. 生成 1 篇 `_posts/YYYY-MM-DD-xxx.md`
-5. 记录到 `.blog_pipeline/state.json`
+3. 选择“最新且未处理”的候选
+4. 默认最多生成 3 篇（可用 `--max-posts` 调整）
+5. 写入 `_posts/YYYY-MM-DD-xxx.md`
+6. 记录到 `.blog_pipeline/state.json`
 
 ---
 
@@ -95,8 +96,8 @@ cd /home/ubuntu/Documents/githubBlog/kelin.github.io
 或者用完整命令（支持手动/自动两种模式）：
 
 ```bash
-# 自动：生成后自动提交并推送
-python3 scripts/run_and_notify.py --mode auto --category tech --auto-publish --push
+# 自动：生成后自动提交并推送（默认最多3篇）
+python3 scripts/run_and_notify.py --mode auto --category tech --max-posts 3 --auto-publish --push
 
 # 手动：指定链接，生成后自动提交并推送
 python3 scripts/run_and_notify.py --mode manual --url "https://www.latent.space/p/dreamer" --category tech --auto-publish --push
@@ -181,5 +182,5 @@ crontab -l
 
 - 模型：`gpt-5.3-codex`
 - 推理：`low`（优先省 token）
-- 每次严格只写 **一篇**
+- 自动模式默认每次最多 **3 篇**（可调）
 - 文章结构由 `prompts/post_prompt.md` 控制

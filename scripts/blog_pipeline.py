@@ -310,7 +310,7 @@ def write_post(meta: dict, body_md: str, out_name: str | None = None) -> Path:
 
 # -------------------- picking --------------------
 
-def pick_newest_unseen(sources: list[dict], state: dict, category: str | None = None) -> dict | None:
+def pick_unseen_candidates(sources: list[dict], state: dict, category: str | None = None) -> list[dict]:
     seen = set(state.get("seen_urls", []))
     candidates: list[dict] = []
 
@@ -343,11 +343,8 @@ def pick_newest_unseen(sources: list[dict], state: dict, category: str | None = 
             it["_ts"] = ts
             candidates.append(it)
 
-    if not candidates:
-        return None
-
     candidates.sort(key=lambda x: x.get("_ts", 0), reverse=True)
-    return candidates[0]
+    return candidates
 
 
 # -------------------- commands --------------------
@@ -398,28 +395,47 @@ def cmd_auto(args) -> int:
         return 2
 
     state = load_json(STATE_FILE, default={"seen_urls": []})
-    item = pick_newest_unseen(sources, state, category=args.category)
-    if not item:
+    candidates = pick_unseen_candidates(sources, state, category=args.category)
+    if not candidates:
         print("[OK] no new items")
         return 0
 
-    meta = {
-        "title": item.get("title", ""),
-        "program": item.get("source", ""),
-        "url": item.get("url", ""),
-        "published": item.get("published", ""),
-        "description": item.get("description", ""),
-        "category": item.get("category", "tech"),
-        "source_type": item.get("source_type", "podcast"),
-    }
+    max_posts = max(1, int(args.max_posts))
+    generated_urls: list[str] = []
+    generated_count = 0
 
-    out_path = generate_one(meta, args)
-    print(f"[OK] generated: {out_path}")
+    for item in candidates:
+        if generated_count >= max_posts:
+            break
 
-    seen = list(dict.fromkeys(state.get("seen_urls", []) + [meta["url"]]))
+        meta = {
+            "title": item.get("title", ""),
+            "program": item.get("source", ""),
+            "url": item.get("url", ""),
+            "published": item.get("published", ""),
+            "description": item.get("description", ""),
+            "category": item.get("category", "tech"),
+            "source_type": item.get("source_type", "podcast"),
+        }
+
+        try:
+            out_path = generate_one(meta, args)
+            print(f"[OK] generated: {out_path}")
+            generated_urls.append(meta["url"])
+            generated_count += 1
+        except Exception as e:
+            print(f"[WARN] generate failed: {meta.get('url')} -> {e}")
+            continue
+
+    if generated_count == 0:
+        print("[ERR] no posts generated from current candidates")
+        return 4
+
+    seen = list(dict.fromkeys(state.get("seen_urls", []) + generated_urls))
     state["seen_urls"] = seen[-6000:]
     state["last_run"] = now_cn().isoformat()
     state["last_category"] = args.category
+    state["last_generated_count"] = generated_count
     save_json(STATE_FILE, state)
     print(f"[OK] state updated: {STATE_FILE}")
     return 0
@@ -492,9 +508,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_manual.add_argument("--source-file", default="", help="Optional local txt/md file as source; when set, skip URL fetch")
     p_manual.set_defaults(func=cmd_manual)
 
-    p_auto = sp.add_parser("auto", parents=[common], help="Auto-pick one newest unseen item from sources.json")
+    p_auto = sp.add_parser("auto", parents=[common], help="Auto-pick newest unseen items from sources.json")
     p_auto.add_argument("--sources-file", default=str(SOURCES_FILE), help="sources config JSON")
     p_auto.add_argument("--category", default="all", choices=["all", "tech", "game"], help="Source category filter")
+    p_auto.add_argument("--max-posts", type=int, default=3, help="Max posts to generate per auto run")
     p_auto.set_defaults(func=cmd_auto)
 
     p_check = sp.add_parser("check-sources", help="Validate source feeds from sources.json")
