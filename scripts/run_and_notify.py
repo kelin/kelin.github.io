@@ -120,6 +120,8 @@ def build_pipeline_cmd(args) -> list[str]:
         cmd += ["--category", args.category]
         cmd += ["--sources-file", args.sources_file]
         cmd += ["--max-posts", str(args.max_posts)]
+        if int(args.lookback_days) > 0:
+            cmd += ["--lookback-days", str(args.lookback_days)]
         if args.strict_select:
             cmd += ["--strict-select"]
             cmd += ["--min-selection-score", str(args.min_selection_score)]
@@ -306,6 +308,7 @@ def main() -> int:
     p.add_argument("--category", default="tech", choices=["all", "tech", "game"])
     p.add_argument("--sources-file", default=str(ROOT / "sources.json"))
     p.add_argument("--max-posts", type=int, default=0, help="auto mode: max posts per run (0 means unlimited)")
+    p.add_argument("--lookback-days", type=int, default=0, help="auto mode: only consider items in last N days (0 means unlimited)")
     p.add_argument("--strict-select", action="store_true", help="enable strict quality selection mode in auto")
     p.add_argument("--min-selection-score", type=int, default=70, help="strict mode score threshold")
     p.add_argument("--max-skip-report", type=int, default=8, help="strict mode: max skipped reasons from pipeline")
@@ -397,6 +400,8 @@ def main() -> int:
     if args.mode == "auto":
         limit_text = "不限制" if int(args.max_posts) <= 0 else str(int(args.max_posts))
         notify_lines.append(f"本轮上限：{limit_text}")
+        if int(args.lookback_days) > 0:
+            notify_lines.append(f"时间范围：最近 {int(args.lookback_days)} 天")
     if generated_paths:
         notify_lines.append(f"本次生成：{len(generated_paths)} 篇")
 

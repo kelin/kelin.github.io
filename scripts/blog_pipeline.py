@@ -95,7 +95,12 @@ def cmd_auto(args) -> int:
         return 2
 
     state = load_json(STATE_FILE, default={"seen_urls": []})
-    candidates = pick_unseen_candidates(sources, state, category=args.category)
+    candidates = pick_unseen_candidates(
+        sources,
+        state,
+        category=args.category,
+        lookback_days=int(getattr(args, "lookback_days", 0) or 0),
+    )
     if not candidates:
         print("[OK] no new items")
         return 0
@@ -329,6 +334,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_auto.add_argument("--sources-file", default=str(SOURCES_FILE), help="sources config JSON")
     p_auto.add_argument("--category", default="all", choices=["all", "tech", "game"], help="Source category filter")
     p_auto.add_argument("--max-posts", type=int, default=3, help="Max posts to generate per auto run")
+    p_auto.add_argument("--lookback-days", type=int, default=0, help="Only consider items published in last N days (0 = no limit)")
     p_auto.add_argument("--strict-select", action="store_true", help="Enable strict quality selection mode")
     p_auto.add_argument("--min-selection-score", type=int, default=DEFAULT_MIN_SELECTION_SCORE, help="Strict mode score threshold")
     p_auto.add_argument("--max-skip-report", type=int, default=DEFAULT_MAX_SKIP_REPORT, help="Max skipped items printed with reasons")

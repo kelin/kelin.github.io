@@ -219,9 +219,17 @@ def select_with_diversity(candidates: list[dict], max_posts: int) -> tuple[list[
     return selected, skipped_due_quota
 
 
-def pick_unseen_candidates(sources: list[dict], state: dict, category: str | None = None) -> list[dict]:
+def pick_unseen_candidates(
+    sources: list[dict],
+    state: dict,
+    category: str | None = None,
+    lookback_days: int = 0,
+) -> list[dict]:
     seen = set(state.get("seen_urls", []))
     candidates: list[dict] = []
+    cutoff_ts = 0.0
+    if int(lookback_days) > 0:
+        cutoff_ts = (now_cn() - dt.timedelta(days=int(lookback_days))).timestamp()
 
     for s in sources:
         if not s.get("enabled", True):
@@ -251,6 +259,11 @@ def pick_unseen_candidates(sources: list[dict], state: dict, category: str | Non
 
             pub = parse_date(it.get("published", ""))
             ts = pub.timestamp() if pub else 0
+            if cutoff_ts > 0:
+                # 仅抓取最近 N 天；无发布时间的条目在 lookback 模式下跳过
+                if ts <= 0 or ts < cutoff_ts:
+                    continue
+
             it["_ts"] = ts
             it["_slow_source"] = slow_source
             it["_source_name"] = name
