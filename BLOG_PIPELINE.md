@@ -116,7 +116,7 @@ python3 scripts/run_and_notify.py \
 - 脚本通过 `subprocess.run(...)` 阻塞等待 `codex exec` 结束。
 - 成功判定：`returncode == 0`，并解析到 `[OK] generated: ...`。
 - 开启 `--auto-publish --push` 后，会自动：`git add` → `git commit` → `git push`。
-- 推送成功会在 Telegram 通知里附上 commit 短 SHA 和 commit 链接（GitHub remote 时自动拼接）。
+- 推送成功会在 Telegram 通知里直接附上对应博客文章链接（而不是只发 git commit 信息）。
 - 任一步失败（生成/提交/推送）都会发失败摘要。
 - auto 模式默认“无新内容不通知”；如需也通知可加 `--notify-no-new`。
 
@@ -183,4 +183,5 @@ crontab -l
 - 模型：`gpt-5.3-codex`
 - 推理：`low`（优先省 token）
 - 自动模式默认每次最多 **3 篇**（可调）
+- 英文原始标题会自动翻译成中文作为博客标题（source_episode 保留原文标题）
 - 文章结构由 `prompts/post_prompt.md` 控制

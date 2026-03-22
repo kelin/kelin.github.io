@@ -264,13 +264,35 @@ def run_codex(prompt: str, model: str, reasoning: str) -> str:
     return out
 
 
+def has_cjk(text: str) -> bool:
+    return bool(re.search(r"[\u4e00-\u9fff]", text or ""))
+
+
+def translate_title_to_zh(title: str, model: str) -> str:
+    t = (title or "").strip()
+    if not t or has_cjk(t):
+        return t
+
+    prompt = (
+        "把下面标题翻译成自然、简洁的中文标题。"
+        "只输出翻译结果，不要解释，不要引号。\n\n"
+        f"原始标题：{t}"
+    )
+    try:
+        out = run_codex(prompt=prompt, model=model, reasoning="minimal")
+        line = out.splitlines()[0].strip()
+        return line or t
+    except Exception:
+        return t
+
+
 # -------------------- output --------------------
 
 def front_matter(meta: dict) -> str:
     dt_cn = now_cn()
     title = (meta.get("title") or "untitled").replace('"', '\\"')
     source_program = (meta.get("program") or "").replace('"', '\\"')
-    source_episode = (meta.get("title") or "").replace('"', '\\"')
+    source_episode = (meta.get("title_raw") or meta.get("title") or "").replace('"', '\\"')
     source_url = meta.get("url", "")
     category = meta.get("category", "tech")
 
@@ -298,7 +320,7 @@ def write_post(meta: dict, body_md: str, out_name: str | None = None) -> Path:
     POSTS_DIR.mkdir(parents=True, exist_ok=True)
 
     dt_cn = now_cn().strftime("%Y-%m-%d")
-    episode = meta.get("title") or "untitled"
+    episode = meta.get("title_raw") or meta.get("title") or "untitled"
     slug = slugify(episode)[:90]
     filename = out_name or f"{dt_cn}-{slug}.md"
 
@@ -360,6 +382,10 @@ def generate_one(meta: dict, args) -> Path:
 
     if page_title and not meta.get("title"):
         meta["title"] = page_title
+
+    raw_title = (meta.get("title") or "").strip()
+    meta["title_raw"] = raw_title
+    meta["title"] = translate_title_to_zh(raw_title, model=args.model)
 
     source_text = page_text[: args.max_source_chars]
     if not source_text.strip():

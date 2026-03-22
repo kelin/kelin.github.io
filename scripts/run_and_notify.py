@@ -143,6 +143,42 @@ def rel_path_for_git(path_text: str) -> str:
         return path_text
 
 
+def read_site_url_config() -> tuple[str, str]:
+    cfg = ROOT / "_config.yml"
+    site_url = ""
+    baseurl = ""
+    if not cfg.exists():
+        return site_url, baseurl
+
+    for raw in cfg.read_text(encoding="utf-8", errors="ignore").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or ":" not in line:
+            continue
+        k, v = line.split(":", 1)
+        k = k.strip()
+        v = v.strip().strip('"').strip("'")
+        if k == "url":
+            site_url = v
+        elif k == "baseurl":
+            baseurl = v
+
+    return site_url.rstrip("/"), baseurl.strip()
+
+
+def post_path_to_blog_url(path_text: str, site_url: str, baseurl: str) -> str:
+    if not site_url:
+        return ""
+
+    name = Path(path_text).name
+    m = re.match(r"(\d{4})-(\d{2})-(\d{2})-(.+)\.(md|markdown)$", name)
+    if not m:
+        return ""
+
+    y, mo, d, slug, _ext = m.groups()
+    base = ("/" + baseurl.strip("/") if baseurl and baseurl != "/" else "")
+    return f"{site_url}{base}/{y}/{mo}/{d}/{slug}.html"
+
+
 def git_publish(generated_paths: list[str], args) -> tuple[bool, str, str, str]:
     # returns (ok, short_message, sha, commit_url)
     paths_to_add: list[str] = []
@@ -310,20 +346,18 @@ def main() -> int:
         return 0
 
     generated_paths = extract_generated_paths(stdout)
+    site_url, baseurl = read_site_url_config()
+    blog_links = [post_path_to_blog_url(p, site_url, baseurl) for p in generated_paths]
+    blog_links = [x for x in blog_links if x]
+
     notify_lines = ["✅ Codex 已完成"]
     if generated_paths:
         notify_lines.append(f"本次生成：{len(generated_paths)} 篇")
-        for p in generated_paths[:5]:
-            notify_lines.append(f"- {p}")
 
     if args.auto_publish:
         ok, msg, sha, commit_url = git_publish(generated_paths, args)
         if ok:
             notify_lines.append(f"仓库：{msg}")
-            if sha:
-                notify_lines.append(f"commit: {sha[:12]}")
-            if commit_url:
-                notify_lines.append(f"链接：{commit_url}")
         else:
             notify_lines.append(f"仓库操作失败：{msg}")
             maybe_notify("\n".join(notify_lines))
@@ -332,6 +366,15 @@ def main() -> int:
             if stderr:
                 print(stderr, file=sys.stderr)
             return 4
+
+    if blog_links:
+        notify_lines.append("博客链接：")
+        for u in blog_links[:8]:
+            notify_lines.append(f"- {u}")
+    elif generated_paths:
+        notify_lines.append("（未能构造公开博客链接，已生成本地文件）")
+        for p in generated_paths[:5]:
+            notify_lines.append(f"- {p}")
 
     maybe_notify("\n".join(notify_lines))
 
