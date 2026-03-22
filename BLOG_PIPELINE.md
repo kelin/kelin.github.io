@@ -39,6 +39,13 @@ cd /home/ubuntu/Documents/githubBlog/kelin.github.io
 ./scripts/manual_post.sh "<url>" "自定义标题" "game"
 ```
 
+如果链接被反爬拦截，可手动准备一份文本再生成（推荐）：
+
+```bash
+# 第4个参数是 source_file（txt/md）
+./scripts/manual_post.sh "https://example.com/post" "自定义标题" "tech" "/path/to/source.txt"
+```
+
 ---
 
 ## 自动模式

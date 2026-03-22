@@ -81,6 +81,8 @@ def build_pipeline_cmd(args) -> list[str]:
             cmd += ["--program", args.program]
         if args.description:
             cmd += ["--description", args.description]
+        if args.source_file:
+            cmd += ["--source-file", args.source_file]
         if args.category:
             cmd += ["--category", args.category]
     else:
@@ -219,6 +221,7 @@ def main() -> int:
     p.add_argument("--title", default="")
     p.add_argument("--program", default="")
     p.add_argument("--description", default="")
+    p.add_argument("--source-file", default="", help="manual mode: use local txt/md as source text (skip URL fetch)")
     p.add_argument("--category", default="tech", choices=["all", "tech", "game"])
     p.add_argument("--sources-file", default=str(ROOT / "sources.json"))
     p.add_argument("--output-filename", default="")

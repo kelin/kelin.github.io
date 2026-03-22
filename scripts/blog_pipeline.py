@@ -111,6 +111,13 @@ def fetch_url_text(url: str, timeout: int = 30) -> tuple[str, str]:
     return title, text
 
 
+def read_source_file_text(path_text: str) -> str:
+    p = Path(path_text).expanduser()
+    if not p.is_absolute():
+        p = (ROOT / p).resolve()
+    return p.read_text(encoding="utf-8", errors="ignore")
+
+
 def feed_items(source: dict) -> list[dict]:
     source_name = source.get("name") or source.get("feed") or "Unknown"
     feed_url = source.get("feed")
@@ -346,11 +353,21 @@ def pick_newest_unseen(sources: list[dict], state: dict, category: str | None = 
 # -------------------- commands --------------------
 
 def generate_one(meta: dict, args) -> Path:
-    page_title, page_text = fetch_url_text(meta["url"])
+    source_file = (getattr(args, "source_file", "") or "").strip()
+
+    if source_file:
+        page_text = read_source_file_text(source_file)
+        page_title = ""
+    else:
+        page_title, page_text = fetch_url_text(meta["url"])
+
     if page_title and not meta.get("title"):
         meta["title"] = page_title
 
     source_text = page_text[: args.max_source_chars]
+    if not source_text.strip():
+        raise RuntimeError("source text is empty (可能被反爬拦截或源文件为空)")
+
     prompt = build_prompt(meta, source_text, prompt_file=Path(args.prompt_file))
 
     body = run_codex(prompt=prompt, model=args.model, reasoning=args.reasoning)
@@ -472,6 +489,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_manual.add_argument("--description", default="")
     p_manual.add_argument("--category", default="tech", choices=["tech", "game"], help="Post category")
     p_manual.add_argument("--source-type", default="podcast", help="podcast/video/blog")
+    p_manual.add_argument("--source-file", default="", help="Optional local txt/md file as source; when set, skip URL fetch")
     p_manual.set_defaults(func=cmd_manual)
 
     p_auto = sp.add_parser("auto", parents=[common], help="Auto-pick one newest unseen item from sources.json")
