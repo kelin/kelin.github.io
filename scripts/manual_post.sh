@@ -2,12 +2,13 @@
 set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
-  echo "Usage: $0 <url> [title]"
+  echo "Usage: $0 <url> [title] [category: tech|game]"
   exit 1
 fi
 
 URL="$1"
 TITLE="${2:-}"
+CATEGORY="${3:-tech}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -17,6 +18,7 @@ cd "$REPO_ROOT"
 python3 scripts/blog_pipeline.py manual \
   --url "$URL" \
   --title "$TITLE" \
+  --category "$CATEGORY" \
   --model gpt-5.3-codex \
   --reasoning low
 

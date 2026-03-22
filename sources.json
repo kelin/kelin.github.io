@@ -1,26 +1,83 @@
 [
   {
+    "name": "Dwarkesh Podcast",
+    "feed": "https://apple.dwarkesh-podcast.workers.dev/feed.rss",
+    "category": "tech",
+    "type": "podcast",
+    "max_items": 25,
+    "enabled": true
+  },
+  {
     "name": "Latent Space",
-    "feed": "https://api.substack.com/feed/podcast/1084089.rss"
+    "feed": "https://api.substack.com/feed/podcast/1084089.rss",
+    "category": "tech",
+    "type": "podcast",
+    "max_items": 25,
+    "enabled": true
   },
   {
-    "name": "AI+a16z",
-    "feed": "https://feeds.simplecast.com/Hb_IuXOo"
+    "name": "The Cognitive Revolution",
+    "feed": "https://feeds.megaphone.fm/RINTP3108857801",
+    "category": "tech",
+    "type": "podcast",
+    "max_items": 25,
+    "enabled": true
   },
   {
-    "name": "a16z",
-    "feed": "https://feeds.simplecast.com/JGE3yC0V"
+    "name": "Hard Fork",
+    "feed": "https://feeds.simplecast.com/6HKOhNgS",
+    "category": "tech",
+    "type": "podcast",
+    "max_items": 10,
+    "enabled": true
   },
   {
-    "name": "Simon Willison",
-    "feed": "https://simonwillison.net/atom/everything/"
+    "name": "Lex Fridman Podcast",
+    "feed": "https://lexfridman.com/feed/podcast/",
+    "category": "tech",
+    "type": "podcast",
+    "max_items": 20,
+    "enabled": true
   },
   {
-    "name": "Interconnects",
-    "feed": "https://www.interconnects.ai/feed"
+    "name": "AIAS Game Maker's Notebook",
+    "feed": "https://rss.libsyn.com/shows/108587/destinations/590891.xml",
+    "category": "game",
+    "type": "podcast",
+    "max_items": 25,
+    "enabled": true
   },
   {
-    "name": "Pragmatic Engineer",
-    "feed": "https://newsletter.pragmaticengineer.com/feed"
+    "name": "Eggplant: The Secret Lives of Games",
+    "feed": "http://feeds.libsyn.com/130245/rss",
+    "category": "game",
+    "type": "podcast",
+    "max_items": 25,
+    "enabled": true
+  },
+  {
+    "name": "Designer Notes",
+    "feed": "https://www.idlethumbs.net/feeds/designer-notes",
+    "category": "game",
+    "type": "podcast",
+    "max_items": 25,
+    "enabled": true
+  },
+  {
+    "name": "Deconstructor of Fun",
+    "feed": "https://www.deconstructoroffun.com/blog?format=rss",
+    "category": "game",
+    "type": "blog",
+    "max_items": 25,
+    "enabled": true
+  },
+  {
+    "name": "GDC (Official Content)",
+    "feed": "https://gdcvault.com/rss.xml",
+    "category": "game",
+    "type": "official-content",
+    "max_items": 40,
+    "exclude_title_regex": "^GDC Vault$",
+    "enabled": true
   }
 ]
