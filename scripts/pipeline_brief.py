@@ -2,18 +2,15 @@ from __future__ import annotations
 
 import json
 import re
-import urllib.request
 from pathlib import Path
 
-from pipeline_common import feed_items, load_json, now_cn, parse_date
+from pipeline_common import feed_items, http_get_bytes, load_json, now_cn, parse_date
 
 DAILY_BRIEF_HN_FEED = "https://hnrss.org/frontpage"
 DAILY_BRIEF_ARXIV_FEED = "https://export.arxiv.org/rss/cs.AI"
 DAILY_BRIEF_ARXIV_FALLBACK = "http://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=submittedDate&sortOrder=descending&start=0&max_results=12"
 DAILY_BRIEF_HF_API = "https://huggingface.co/api/trending?type=model"
 DAILY_BRIEF_GITHUB_PY_URL = "https://github.com/trending/python?since=daily"
-
-UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36"
 
 GAME_SOURCE_HINTS = [
     "gdc",
@@ -95,9 +92,8 @@ def top_feed_items_for_brief(feed_url: str, source_name: str, max_items: int = 8
 
 
 def fetch_hf_trending_models(max_items: int = 8) -> list[dict]:
-    req = urllib.request.Request(DAILY_BRIEF_HF_API, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=20) as resp:
-        data = json.loads(resp.read().decode("utf-8", errors="ignore"))
+    raw, _ = http_get_bytes(DAILY_BRIEF_HF_API, timeout=20)
+    data = json.loads(raw.decode("utf-8", errors="ignore"))
 
     out: list[dict] = []
     for x in data.get("recentlyTrending", [])[:max_items]:
@@ -121,9 +117,8 @@ def fetch_hf_trending_models(max_items: int = 8) -> list[dict]:
 
 
 def fetch_github_trending_python(max_items: int = 8) -> list[dict]:
-    req = urllib.request.Request(DAILY_BRIEF_GITHUB_PY_URL, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=20) as resp:
-        html = resp.read().decode("utf-8", errors="ignore")
+    raw, _ = http_get_bytes(DAILY_BRIEF_GITHUB_PY_URL, timeout=20)
+    html = raw.decode("utf-8", errors="ignore")
 
     repos = re.findall(r'<h2[^>]*class="h3 lh-condensed"[^>]*>\s*<a[^>]*href="/([^"]+)"', html)
 

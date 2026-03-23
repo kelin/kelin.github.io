@@ -3,12 +3,16 @@ from __future__ import annotations
 import datetime as dt
 import email.utils
 import json
+import random
 import re
 import subprocess
 import textwrap
+import time
+import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 POSTS_DIR = ROOT / "_posts"
@@ -20,6 +24,13 @@ PROMPT_FILE = ROOT / "prompts" / "post_prompt.md"
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36"
 DEFAULT_MAX_SOURCE_CHARS = 22000
 DEFAULT_MAX_ITEMS_PER_FEED = 30
+HTTP_MAX_RETRIES = 2
+HTTP_BASE_BACKOFF_SEC = 1.2
+HTTP_MAX_BACKOFF_SEC = 15.0
+HOST_MIN_INTERVAL_SEC = 1.1
+
+RETRYABLE_HTTP_CODES = {429, 500, 502, 503, 504}
+_LAST_HOST_ACCESS_TS: dict[str, float] = {}
 
 
 def now_cn() -> dt.datetime:
@@ -76,11 +87,97 @@ def parse_date(s: str) -> dt.datetime | None:
         return None
 
 
+def _respect_host_interval(url: str) -> None:
+    host = (urlparse(url).netloc or "").lower()
+    if not host:
+        return
+
+    now = time.time()
+    last = _LAST_HOST_ACCESS_TS.get(host, 0.0)
+    wait = HOST_MIN_INTERVAL_SEC - (now - last)
+    if wait > 0:
+        time.sleep(wait + random.uniform(0.05, 0.45))
+
+
+def _backoff_seconds(attempt: int) -> float:
+    base = HTTP_BASE_BACKOFF_SEC * (2 ** max(0, attempt))
+    return min(HTTP_MAX_BACKOFF_SEC, base + random.uniform(0.0, 0.6))
+
+
+def _retry_after_seconds(headers) -> float | None:
+    if not headers:
+        return None
+
+    raw = (headers.get("Retry-After") or "").strip()
+    if not raw:
+        return None
+
+    if raw.isdigit():
+        return min(HTTP_MAX_BACKOFF_SEC, float(raw))
+
+    try:
+        dt_retry = email.utils.parsedate_to_datetime(raw)
+        if dt_retry.tzinfo is None:
+            dt_retry = dt_retry.replace(tzinfo=dt.timezone.utc)
+        sec = (dt_retry - dt.datetime.now(dt.timezone.utc)).total_seconds()
+        if sec > 0:
+            return min(HTTP_MAX_BACKOFF_SEC, sec)
+    except Exception:
+        return None
+
+    return None
+
+
+def http_get_bytes(url: str, timeout: int = 30, max_retries: int = HTTP_MAX_RETRIES) -> tuple[bytes, object]:
+    headers = {
+        "User-Agent": UA,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Cache-Control": "no-cache",
+    }
+
+    attempt = 0
+    while True:
+        _respect_host_interval(url)
+        req = urllib.request.Request(url, headers=headers)
+
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                body = resp.read()
+                resp_headers = resp.headers
+
+            host = (urlparse(url).netloc or "").lower()
+            if host:
+                _LAST_HOST_ACCESS_TS[host] = time.time()
+            return body, resp_headers
+
+        except urllib.error.HTTPError as e:
+            host = (urlparse(url).netloc or "").lower()
+            if host:
+                _LAST_HOST_ACCESS_TS[host] = time.time()
+
+            retry_after = _retry_after_seconds(getattr(e, "headers", None))
+            should_retry = e.code in RETRYABLE_HTTP_CODES and attempt < max_retries
+            if should_retry:
+                time.sleep(retry_after if retry_after is not None else _backoff_seconds(attempt))
+                attempt += 1
+                continue
+            raise
+
+        except urllib.error.URLError:
+            host = (urlparse(url).netloc or "").lower()
+            if host:
+                _LAST_HOST_ACCESS_TS[host] = time.time()
+
+            if attempt < max_retries:
+                time.sleep(_backoff_seconds(attempt))
+                attempt += 1
+                continue
+            raise
+
+
 def fetch_url_text(url: str, timeout: int = 30) -> tuple[str, str]:
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        raw = resp.read()
-        ctype = resp.headers.get("Content-Type", "")
+    raw, resp_headers = http_get_bytes(url, timeout=timeout)
+    ctype = resp_headers.get("Content-Type", "")
 
     encoding = "utf-8"
     m = re.search(r"charset=([\w\-]+)", ctype, re.I)
@@ -113,9 +210,7 @@ def feed_items(source: dict) -> list[dict]:
     include_pattern = source.get("include_title_regex", "")
     exclude_pattern = source.get("exclude_title_regex", "")
 
-    req = urllib.request.Request(feed_url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=35) as resp:
-        xml = resp.read()
+    xml, _ = http_get_bytes(feed_url, timeout=35)
 
     root = ET.fromstring(xml)
     items: list[dict] = []
