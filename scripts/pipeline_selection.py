@@ -34,6 +34,11 @@ MARKETING_KEYWORDS = [
     "join us", "coming soon", "newsletter", "立即购买", "限时", "优惠", "报名", "直播预告",
 ]
 
+# 明确导流/销售导向词：命中则视为强营销
+STRONG_MARKETING_KEYWORDS = [
+    "sponsor", "sponsored", "discount", "register", "立即购买", "限时", "优惠", "报名", "直播预告",
+]
+
 ACTIONABLE_KEYWORDS = [
     "how", "guide", "case study", "post-mortem", "benchmark", "profiling", "architecture",
     "教程", "实践", "方法", "复盘", "架构", "性能", "排障",
@@ -48,6 +53,11 @@ NOVELTY_KEYWORDS = [
 def contains_any(text: str, keywords: list[str]) -> bool:
     t = (text or "").lower()
     return any(k in t for k in keywords)
+
+
+def keyword_hits(text: str, keywords: list[str]) -> list[str]:
+    t = (text or "").lower()
+    return [k for k in keywords if k in t]
 
 
 def source_quality_score(source_name: str) -> tuple[int, str]:
@@ -125,10 +135,18 @@ def evaluate_candidate(item: dict, min_selection_score: int) -> dict:
     score += actionable
     reasons.append(f"可执行性 {actionable}/15")
 
-    has_marketing_signal = contains_any(text, MARKETING_KEYWORDS)
-    if has_marketing_signal:
+    marketing_hits = keyword_hits(text, MARKETING_KEYWORDS)
+    strong_marketing_hits = keyword_hits(text, STRONG_MARKETING_KEYWORDS)
+
+    if strong_marketing_hits:
         score -= 20
-        skip_reasons.append("营销/宣传信号明显")
+        skip_reasons.append("强营销/导流信号")
+    elif len(marketing_hits) >= 2:
+        score -= 12
+        skip_reasons.append("营销信号较多")
+    elif len(marketing_hits) == 1:
+        score -= 6
+        reasons.append("轻营销信号 -6")
 
     important_signal = contains_any(text, IMPORTANT_KEYWORDS)
     if important_signal:
@@ -153,7 +171,13 @@ def evaluate_candidate(item: dict, min_selection_score: int) -> dict:
 
     score = max(0, min(100, score))
 
-    if has_marketing_signal:
+    hard_marketing_reject = bool(strong_marketing_hits)
+
+    # 只有“多营销信号 + 信息偏少”才强制拒绝，降低误杀。
+    if len(marketing_hits) >= 3 and dlen < LOW_INFO_DESC_CHARS:
+        hard_marketing_reject = True
+
+    if hard_marketing_reject:
         status = "rejected"
     elif important_but_low_info:
         status = "brief_merge"
