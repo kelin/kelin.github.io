@@ -4,10 +4,36 @@
     "https://www.latent.space/p/dreamer",
     "https://www.deconstructoroffun.com/blog/eknthr4vix4z4scox5j44wssfgv1pd",
     "https://www.latent.space/p/metr",
-    "https://eggplant.show/154-gathering-community-with-ben-rausch-and-anja-venter-playtopia"
+    "https://eggplant.show/154-gathering-community-with-ben-rausch-and-anja-venter-playtopia",
+    "https://www.latent.space/p/valuemule",
+    "https://www.nytimes.com/column/hard-fork",
+    "https://www.dwarkesh.com/p/lewis-bollard",
+    "https://www.latent.space/p/turbopuffer",
+    "https://www.latent.space/p/cuspai",
+    "https://www.latent.space/p/swe-bench-dead",
+    "https://www.latent.space/p/jeffdean",
+    "https://www.latent.space/p/boltz",
+    "https://www.latent.space/p/goodfire",
+    "https://www.latent.space/p/edison",
+    "https://www.latent.space/p/captaining-imo-gold-deep-think-on",
+    "https://www.latent.space/p/brexs-ai-hail-mary-with-cto-james",
+    "https://www.latent.space/p/neurips-best-paper-1000-layer-networks",
+    "https://www.latent.space/p/state-of-code-evals-after-swe-bench",
+    "https://www.latent.space/p/state-of-post-training-from-gpt-41",
+    "https://www.latent.space/p/state-of-rlreasoning-imoioi-gold",
+    "https://www.latent.space/p/state-of-ai-startups-memorylearning",
+    "https://www.dwarkesh.com/p/dow-anthropic",
+    "https://www.latent.space/p/felix-anthropic",
+    "https://www.latent.space/p/cursor-third-era",
+    "https://www.latent.space/p/a16z",
+    "https://www.latent.space/p/state-of-evals-lmarenas-17b-vision",
+    "https://www.latent.space/p/paid-anthropic-distillation-and-how",
+    "https://www.dwarkesh.com/p/thoughts-on-sutton",
+    "https://www.dwarkesh.com/p/thoughts-on-ai-progress-dec-2025-video",
+    "https://www.dwarkesh.com/p/why-i-dont-think-agi-is-right-around"
   ],
-  "last_run": "2026-03-23T01:44:34.680143+08:00",
-  "last_category": "all",
+  "last_run": "2026-03-23T20:29:35.024219+08:00",
+  "last_category": "tech",
   "daily_brief_pool": {
     "2026-03-23": [
       {
@@ -801,18 +827,18 @@
         "category": "tech"
       },
       {
-        "title": "Zvi's Mic Works!  Recursive Self-Improvement, Live Player Analysis, Anthropic vs DoW + More!",
-        "url": "https://www.cognitiverevolution.ai/zvi-s-mic-works-recursive-self-improvement-live-player-analysis-anthropic-vs-dow-more/",
+        "title": "Your Agent's Self-Improving Swiss Army Knife: Composio CTO Karan Vaidya on Building Smart Tools",
+        "url": "https://www.cognitiverevolution.ai/your-agent-s-self-improving-swiss-army-knife-composio-cto-karan-vaidya-on-building-smart-tools/",
         "source": "The Cognitive Revolution",
-        "description": "Zvi Mowshowitz returns to survey the current AI landscape, from recursive self-improvement and the shift from the “beginning” to the “middle” of the AI story to what true AI end-game would look like. He and Nathan dig into AI-driven job loss, real-world productivity impacts, and the ethics of trying to escape a “permanent underclass.” They assess today’s AI live players, why Anthropic may be slightly ahead, and whether Chinese, xAI, or Meta can catch up. The conversation closes with Anthropic’s Responsible Scaling Policy, p(doom), AI safety options, and how they each use AI in their own work.\n\nSponsors:\n\nTasklet: \nTasklet: Build your own Cognitive Revolution monitoring agent in one click.Try it for free and use code COGREV for 50% off your first month at https://tasklet.ai\n\nVCX: \nVCX, by Fundrise, is the public ticker for private tech, giving everyday investors access to high-growth private companies in AI, space, defense tech, and more. Learn how to invest at https://getvcx.com\n\nCHAPTERS:\n\n(00:00) About the Episode\n\n(02:25) Entering the middle game\n\n(09:08) AI layoffs and jobs (Part 1)\n\n(15:50) Sponsors: Tasklet | VCX\n\n(18:43) AI layoffs and jobs (Part 2)\n\n(18:44) AI growth and elites\n\n(27:00) Defining the AI endgame\n\n(36:09) Live players and laggards\n\n(45:38) China, compute, and distillation\n\n(56:03) Meta, Musk, and strategy\n\n(01:06:41) Google's faltering AI strategy\n\n(01:22:25) Anthropic's scaling policy shift\n\n(01:36:29) Anthropic and domestic surveillance\n\n(01:57:29) Courts, power, and Anthropic\n\n(02:18:50) Model fatigue and productivity\n\n(02:34:53) Alignment basins and doom\n\n(02:47:24) Slowing AI and activism\n\n(03:05:37) Forbidden techniques and choices\n\n(03:22:31) Episode Outro\n\n(03:26:31) Outro\n\nPRODUCED BY:\n\nhttps://aipodcast.ing\n\nSOCIAL LINKS:\n\nWebsite: https://www.cognitiverevolution.ai\n\nTwitter (Podcast): https://x.com/cogrev_podcast\n\nTwitter (Nathan): https://x.com/labenz\n\nLinkedIn: https://linkedin.com/in/nathanlabenz/\n\nYoutube: https://youtube.com/@CognitiveRevolutionPodcast\n\nApple: https://podcasts.apple.com/de/podcast/the-cognitive-revolution-ai-builders-researchers-and/id1669813431\n\nSpotify: https://open.spotify.com/show/6yHyok3M3BjqzR0VB5MSyk",
+        "description": "Karan Vaidya, CTO of Composio, explains how their “smart tool” platform lets AI agents access over 50,000 tools across 1,000+ apps through a single interface. He details how Composio handles tool discovery, authentication, sandboxes, and logging, and how an AI-powered feedback loop continuously improves tools in real time. The conversation explores avoiding model lock-in through robust skills and instructions, translating capabilities across model providers, and why the best agent use cases look more like full jobs than isolated tasks.\n\nGoogle: Try Google's latest and greatest model, Gemini 3.1 Pro, in AI Studio (https://aistudio.google.com/) or the Gemini app.\n\nSponsors:\n\nTasklet: \n\nTasklet: Build your own Cognitive Revolution monitoring agent in one click.Try it for free and use code COGREV for 50% off your first month at https://tasklet.ai\n\nVCX: \n\nVCX, by Fundrise, is the public ticker for private tech, giving everyday investors access to high-growth private companies in AI, space, defense tech, and more. Learn how to invest at https://getvcx.com\n\nClaude: \n\nClaude is the AI collaborator that understands your entire workflow, from drafting and research to coding and complex problem-solving. Start tackling bigger problems with Claude and unlock Claude Pro’s full capabilities at https://claude.ai/tcr\n\nCHAPTERS:\n\n(00:00) About the Episode\n\n(03:38) Special Sponsor\n\n(05:10) Composio overview and harness\n\n(10:20) Users, trust, security\n\n(19:45) Sandboxes and execution (Part 1)\n\n(19:53) Sponsors: Tasklet | VCX\n\n(22:46) Sandboxes and execution (Part 2)\n\n(28:07) Smart MCPs and skills (Part 1)\n\n(34:25) Sponsor: Claude\n\n(36:38) Smart MCPs and skills (Part 2)\n\n(44:10) Context, access, upgrades\n\n(54:05) Skills and model lock-in\n\n(01:03:51) Memory and agent tools\n\n(01:09:21) AI and SaaS disruption\n\n(01:20:20) Agents, costs, labor\n\n(01:31:18) Monetization and interfaces\n\n(01:36:13) Episode Outro\n\n(01:39:56) Outro\n\nPRODUCED BY:\n\nhttps://aipodcast.ing\n\nSOCIAL LINKS:\n\nWebsite: https://www.cognitiverevolution.ai\n\nTwitter (Podcast): https://x.com/cogrev_podcast\n\nTwitter (Nathan): https://x.com/labenz\n\nLinkedIn: https://linkedin.com/in/nathanlabenz/\n\nYoutube: https://youtube.com/@CognitiveRevolutionPodcast\n\nApple: https://podcasts.apple.com/de/podcast/the-cognitive-revolution-ai-builders-researchers-and/id1669813431\n\nSpotify: https://open.spotify.com/show/6yHyok3M3BjqzR0VB5MSyk",
+        "category": "tech",
         "score": 61,
-        "why_not": "营销/宣传信号明显",
-        "ts": 1773920377.0,
-        "category": "tech"
+        "why_not": "强营销/导流信号",
+        "ts": 1774182871.0
       }
     ]
   },
-  "last_generated_count": 1,
+  "last_generated_count": 26,
   "strict_select": true,
   "min_selection_score": 70,
   "last_daily_brief": "2026-03-23T01:34:03.072598+08:00",
