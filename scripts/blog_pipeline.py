@@ -47,17 +47,47 @@ from pipeline_selection import (
 )
 
 
+def _looks_like_js_shell(text: str) -> bool:
+    t = (text or "").lower()
+    return (
+        "this site requires javascript" in t
+        or "please turn on javascript" in t
+        or "enable javascript" in t
+    )
+
+
 def generate_one(meta: dict, args) -> Path:
     source_file = (getattr(args, "source_file", "") or "").strip()
 
+    page_title = ""
+    page_text = ""
+    fetch_err = ""
+
     if source_file:
         page_text = read_source_file_text(source_file)
-        page_title = ""
     else:
-        page_title, page_text = fetch_url_text(meta["url"])
+        try:
+            page_title, page_text = fetch_url_text(meta["url"])
+        except Exception as e:
+            fetch_err = str(e)
 
     if page_title and not meta.get("title"):
         meta["title"] = page_title
+
+    # 兜底：页面抓取失败/仅返回 JS 壳时，回退到 feed 摘要，避免单条失败拖垮整轮
+    fallback_desc = (meta.get("description") or "").strip()
+    if (not page_text.strip() or _looks_like_js_shell(page_text)) and fallback_desc:
+        hint = ""
+        if fetch_err:
+            hint = f"\n\n[抓取限制] {fetch_err}"
+        page_text = (
+            "[信息覆盖边界] 原页面抓取受限，以下为 feed 摘要/说明，结论可能不完整。\n\n"
+            + fallback_desc
+            + hint
+        )
+
+    if not page_text.strip() and fetch_err:
+        raise RuntimeError(f"source fetch failed and no fallback text: {fetch_err}")
 
     raw_title = (meta.get("title") or "").strip()
     meta["title_raw"] = raw_title
@@ -110,13 +140,14 @@ def cmd_auto(args) -> int:
     min_score = int(args.min_selection_score)
 
     rejected: list[dict] = []
+    backup_items: list[dict] = []
 
     if args.strict_select:
         evaluated = [evaluate_candidate(x, min_score) for x in candidates]
         selected_items, skipped_due_quota = select_with_diversity(evaluated, max_posts)
+        backup_items = list(skipped_due_quota)
         brief_pool = [x for x in evaluated if x.get("_status") == "brief_merge"]
         rejected = [x for x in evaluated if x.get("_status") == "rejected"] + skipped_due_quota
-        update_daily_brief_pool(state, rejected)
 
         for it in selected_items:
             print(f"[SELECT] {it.get('url','')} | score={it.get('_score',0)} | why={it.get('_why','')}")
@@ -133,14 +164,25 @@ def cmd_auto(args) -> int:
     generated_urls: list[str] = []
     generated_count = 0
 
-    for item in selected_items:
+    generation_queue = list(selected_items)
+    # 如果主选条目抓取失败，允许从“名额限制”候补中补位，避免单条失败导致整轮失败
+    if args.strict_select and backup_items:
+        generation_queue.extend(backup_items)
+
+    seen_queue_urls: set[str] = set()
+    for item in generation_queue:
         if generated_count >= max_posts:
             break
+
+        item_url = (item.get("url") or "").strip()
+        if not item_url or item_url in seen_queue_urls:
+            continue
+        seen_queue_urls.add(item_url)
 
         meta = {
             "title": item.get("title", ""),
             "program": item.get("source", ""),
-            "url": item.get("url", ""),
+            "url": item_url,
             "published": item.get("published", ""),
             "description": item.get("description", ""),
             "category": item.get("category", "tech"),
@@ -174,6 +216,11 @@ def cmd_auto(args) -> int:
     if generated_count == 0:
         print("[ERR] no posts generated from current candidates")
         return 4
+
+    if args.strict_select and rejected:
+        generated_set = set(generated_urls)
+        rejected_for_pool = [x for x in rejected if (x.get("url") or "") not in generated_set]
+        update_daily_brief_pool(state, rejected_for_pool)
 
     seen = list(dict.fromkeys(state.get("seen_urls", []) + generated_urls))
     state["seen_urls"] = seen[-6000:]
