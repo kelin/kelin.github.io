@@ -97,10 +97,11 @@
     "https://www.idlethumbs.net/designernotes/episodes/harvey-smith-1",
     "https://www.deconstructoroffun.com/blog/2025/12/31/12-gaming-predictions-for-2026",
     "https://www.deconstructoroffun.com/blog/xboxs-endgame",
-    "https://www.nytimes.com/2022/10/04/podcasts/hard-fork-technology.html"
+    "https://www.nytimes.com/2022/10/04/podcasts/hard-fork-technology.html",
+    "https://eggplant.show/155-gdc-2026-live-special"
   ],
-  "last_run": "2026-03-24T20:01:02.973088+08:00",
-  "last_category": "tech",
+  "last_run": "2026-03-24T21:01:20.258438+08:00",
+  "last_category": "game",
   "daily_brief_pool": {
     "2026-03-23": [
       {
@@ -1356,6 +1357,16 @@
         "ts": 1757084714.0
       },
       {
+        "title": "Escape From Tarkov and the Creation of Extraction Shooters with Nikita Buyanov",
+        "url": "https://interactive.libsyn.com/escape-from-tarkov-and-the-creation-of-extraction-shooters-with-nikita-buyanov",
+        "source": "AIAS Game Maker's Notebook",
+        "description": "Log in to your account at www.escapefromtarkov.com and redeem the code NIKITAONGMNPODCAST to receive a special gift from Battlestate Games.\n Trent Kusters  chats with Nikita Buyanov , the COO, Founder, and Game Director at  Battlestate Games , creators of  Escape From Tarkov . Together they discuss his journey in games to the founding of  Battlestate Games ; the inspirations behind  Escape From Tarkov that led to the creation of the extraction shooter genre; keeping their own artistic vision intact while listening to community feedback; balancing the game's meta and when they decide to intervene or not; and the early lessons that came out of their explosive debut. \n This episode is sponsored by:\n Xsolla \n Accelbyte \n Episode Host: Trent Kusters \n Producers: Claudio Tapia and Josh Chu, The Academy of Interactive Arts & Sciences\n If you enjoyed this episode, please consider subscribing and leaving us a rating and review .\n Support the show and get all of our episodes early/ad-free: https://bit.ly/4kU34Lt \n Follow us: linktr.ee/AIAS \n Please consider supporting game dev students with: AIAS Foundation",
+        "category": "game",
+        "score": 67,
+        "why_not": "强营销/导流信号",
+        "ts": 1756728000.0
+      },
+      {
         "title": "Stephen Kotkin — How Stalin became the most powerful dictator in history",
         "url": "https://www.dwarkesh.com/p/stephen-kotkin",
         "source": "Dwarkesh Podcast",
@@ -1364,6 +1375,26 @@
         "score": 67,
         "why_not": "强营销/导流信号",
         "ts": 1752163888.0
+      },
+      {
+        "title": "Battlefield 6 Creative Director Thomas Andersson",
+        "url": "https://interactive.libsyn.com/battlefield-6-creative-director-thomas-andersson",
+        "source": "AIAS Game Maker's Notebook",
+        "description": "Adam Orth  chats with  Battlefield 6  Creative Director,  Thomas Andersson . Together they discuss his path in games from level design to direction; what it takes to lead a team the size it takes to create a Battlefield title; the pillars and core features that drove the mission in the newest entry; how the kinetic movement and destruction work together to create unique and epic moments; and the technical and design challenges present when emphasizing player freedom.\n This episode is sponsored by:\n Xsolla \n Accelbyte \n Episode Host: Adam Orth \n Producers: Claudio Tapia and Josh Chu, The Academy of Interactive Arts & Sciences\n If you enjoyed this episode, please consider subscribing and leaving us a rating and review .\n Support the show and get all of our episodes early/ad-free: https://bit.ly/4kU34Lt \n Follow us: linktr.ee/AIAS \n Please consider supporting game dev students with: AIAS Foundation",
+        "category": "game",
+        "score": 65,
+        "why_not": "强营销/导流信号",
+        "ts": 1773032400.0
+      },
+      {
+        "title": "From Used Car Salesman to Indie Game Publisher: The New Blood Story",
+        "url": "https://interactive.libsyn.com/from-used-car-salesman-to-indie-game-publisher-the-new-blood-story",
+        "source": "AIAS Game Maker's Notebook",
+        "description": "Trent Kusters  chats with  Dave Oshry  of  New Blood Interactive . Together they discuss how he went from games journalism to publishing; navigating the ins and outs of publishing on PC and how they landed their first deal; how nostalgia meets modern in the boomer shooter genre; their approach to the publisher/developer revenue split; how they uplift individual creators; and why their slogan of \"We hate money\" has led to prolonged success.\n This episode is sponsored by:\n Xsolla \n Episode Host: Trent Kusters \n Producers: Claudio Tapia and Josh Chu, The Academy of Interactive Arts & Sciences\n If you enjoyed this episode, please consider subscribing and leaving us a rating and review .\n Support the show and get all of our episodes early/ad-free: https://bit.ly/4kU34Lt \n Follow us: linktr.ee/AIAS \n Please consider supporting game dev students with: AIAS Foundation",
+        "category": "game",
+        "score": 65,
+        "why_not": "强营销/导流信号",
+        "ts": 1760989500.0
       },
       {
         "title": "#492 – Rick Beato: Greatest Guitarists of All Time, History & Future of Music",
@@ -1514,6 +1545,26 @@
         "score": 61,
         "why_not": "强营销/导流信号",
         "ts": 1769309580.0
+      },
+      {
+        "title": "Hard Truths About Co-Founders, Capital, and Competition",
+        "url": "https://www.deconstructoroffun.com/blog/2025/12/9/hard-truths-about-co-founders-capital-and-competition",
+        "source": "Deconstructor of Fun",
+        "description": "AppCharge went from zero to $500M+ in gaming transactions, but the real \nstory is three years of grinding, failed funding rounds, and two best \nfriends learning to disagree without breaking",
+        "category": "game",
+        "score": 61,
+        "why_not": "总分 61 低于阈值 70",
+        "ts": 1765279363.0
+      },
+      {
+        "title": "Loyalty Platforms 101: The Complete Guide to Gaming's Fastest-Growing UA Channel",
+        "url": "https://www.deconstructoroffun.com/blog/2025/12/1/loyalty-platforms-101-the-complete-guide-to-gamings-fastest-growing-ua-channel",
+        "source": "Deconstructor of Fun",
+        "description": "Why are major studios suddenly throwing a third of their media budgets at \nloyalty platforms? VYBS founder Ido Raz breaks down the channel everyone \ndismissed as \"cheap installs\" that's now fueling the industry's fastest \ngrowth.",
+        "category": "game",
+        "score": 61,
+        "why_not": "总分 61 低于阈值 70",
+        "ts": 1764593209.0
       }
     ]
   },
