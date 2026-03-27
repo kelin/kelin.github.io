@@ -89,6 +89,11 @@ def is_no_new_items(stdout: str) -> bool:
     return "[OK] no new items" in (stdout or "")
 
 
+def is_no_qualified_items(stdout: str) -> bool:
+    # from blog_pipeline auto mode: [ERR] no posts generated from current candidates
+    return "[ERR] no posts generated from current candidates" in (stdout or "")
+
+
 def build_pipeline_cmd(args) -> list[str]:
     cmd = [
         sys.executable,
@@ -370,6 +375,35 @@ def main() -> int:
     stderr = (proc.stderr or "").strip()
 
     if proc.returncode != 0:
+        # auto 严选下经常出现“本轮无达标内容”，这不是系统异常，按信息通知处理
+        if args.mode == "auto" and is_no_qualified_items(stdout):
+            selected_fb, skipped_fb, _merged_fb = extract_selection_feedback(stdout)
+            notify_lines = ["ℹ️ 本轮无达到发布标准的内容", f"category={args.category}"]
+
+            limit_text = "不限制" if int(args.max_posts) <= 0 else str(int(args.max_posts))
+            notify_lines.append(f"本轮上限：{limit_text}")
+            notify_lines.append(f"最低分阈值：{int(args.min_selection_score)}")
+            if int(args.lookback_days) > 0:
+                notify_lines.append(f"时间范围：最近 {int(args.lookback_days)} 天")
+
+            if not args.no_notify_skip_reasons and skipped_fb:
+                top_n = int(args.max_skip_report) if int(args.max_skip_report) > 0 else 5
+                top_n = max(1, min(top_n, 12))
+                notify_lines.append("为什么未通过（Top）：")
+                for x in skipped_fb[:top_n]:
+                    why = x["why"][:80] + ("…" if len(x["why"]) > 80 else "")
+                    notify_lines.append(f"- [{x['score']}] {x['url']}")
+                    notify_lines.append(f"  原因：{why}")
+            elif selected_fb:
+                notify_lines.append("本轮有入选候选，但生成阶段失败。")
+
+            maybe_notify("\n".join(notify_lines))
+            if stdout:
+                print(stdout)
+            if stderr:
+                print(stderr, file=sys.stderr)
+            return 0
+
         fail_msg = "❌ Codex 生成失败"
         if stderr:
             fail_msg += f"\n错误：{stderr[-400:]}"
