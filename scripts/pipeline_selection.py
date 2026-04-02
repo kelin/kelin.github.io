@@ -34,10 +34,6 @@ MARKETING_KEYWORDS = [
     "join us", "coming soon", "newsletter", "立即购买", "限时", "优惠", "报名", "直播预告",
 ]
 
-# 明确导流/销售导向词：命中则视为强营销
-STRONG_MARKETING_KEYWORDS = [
-    "sponsor", "sponsored", "discount", "register", "立即购买", "限时", "优惠", "报名", "直播预告",
-]
 
 ACTIONABLE_KEYWORDS = [
     "how", "guide", "case study", "post-mortem", "benchmark", "profiling", "architecture",
@@ -136,12 +132,11 @@ def evaluate_candidate(item: dict, min_selection_score: int) -> dict:
     reasons.append(f"可执行性 {actionable}/15")
 
     marketing_hits = keyword_hits(text, MARKETING_KEYWORDS)
-    strong_marketing_hits = keyword_hits(text, STRONG_MARKETING_KEYWORDS)
 
-    if strong_marketing_hits:
-        score -= 20
-        skip_reasons.append("强营销/导流信号")
-    elif len(marketing_hits) >= 2:
+    if len(marketing_hits) >= 3:
+        score -= 18
+        skip_reasons.append("营销信号较多")
+    elif len(marketing_hits) == 2:
         score -= 12
         skip_reasons.append("营销信号较多")
     elif len(marketing_hits) == 1:
@@ -171,15 +166,8 @@ def evaluate_candidate(item: dict, min_selection_score: int) -> dict:
 
     score = max(0, min(100, score))
 
-    hard_marketing_reject = bool(strong_marketing_hits)
-
-    # 只有“多营销信号 + 信息偏少”才强制拒绝，降低误杀。
-    if len(marketing_hits) >= 3 and dlen < LOW_INFO_DESC_CHARS:
-        hard_marketing_reject = True
-
-    if hard_marketing_reject:
-        status = "rejected"
-    elif important_but_low_info:
+    # 不再因为“强营销词”一票否决；只保留分级扣分。
+    if important_but_low_info:
         status = "brief_merge"
     elif item.get("_slow_source"):
         status = "selected"
