@@ -139,6 +139,16 @@ def build_pipeline_cmd(args) -> list[str]:
         cmd += ["--output-filename", args.output_filename]
     if args.max_source_chars:
         cmd += ["--max-source-chars", str(args.max_source_chars)]
+    if args.whisper_fallback:
+        cmd += ["--whisper-fallback"]
+    if args.whisper_model:
+        cmd += ["--whisper-model", args.whisper_model]
+    if args.whisper_language:
+        cmd += ["--whisper-language", args.whisper_language]
+    if args.compute_type:
+        cmd += ["--compute-type", args.compute_type]
+    if args.min_source_text_chars:
+        cmd += ["--min-source-text-chars", str(args.min_source_text_chars)]
 
     return cmd
 
@@ -320,6 +330,11 @@ def main() -> int:
     p.add_argument("--max-brief-items", type=int, default=5, help="strict mode: max low-info important items merged")
     p.add_argument("--output-filename", default="")
     p.add_argument("--max-source-chars", type=int, default=0)
+    p.add_argument("--whisper-fallback", action="store_true", help="when source text is thin for audio/video items, try faster-whisper transcript fallback")
+    p.add_argument("--whisper-model", default="small")
+    p.add_argument("--whisper-language", default="")
+    p.add_argument("--compute-type", default="int8")
+    p.add_argument("--min-source-text-chars", type=int, default=4000)
 
     p.add_argument("--model", default="gpt-5.3-codex")
     p.add_argument("--reasoning", default="low", choices=["minimal", "low", "medium", "high", "xhigh"])

@@ -21,6 +21,10 @@ CMD=(
   --url "$URL"
   --title "$TITLE"
   --category "$CATEGORY"
+  --whisper-fallback
+  --whisper-model small
+  --compute-type int8
+  --min-source-text-chars 4000
   --model gpt-5.3-codex
   --reasoning low
 )

@@ -236,6 +236,13 @@ def feed_items(source: dict) -> list[dict]:
             if not link:
                 link = (it.findtext("guid") or "").strip()
 
+            enclosure = it.find("enclosure")
+            media_url = ""
+            media_type = ""
+            if enclosure is not None:
+                media_url = (enclosure.attrib.get("url") or "").strip()
+                media_type = (enclosure.attrib.get("type") or "").strip()
+
             pub_raw = (it.findtext("pubDate") or "").strip()
             desc = (it.findtext("description") or "").strip()
             dt_obj = parse_date(pub_raw)
@@ -246,6 +253,8 @@ def feed_items(source: dict) -> list[dict]:
                     "source_type": source_type,
                     "title": title,
                     "url": link,
+                    "media_url": media_url,
+                    "media_type": media_type,
                     "published": dt_obj.isoformat() if dt_obj else "",
                     "description": strip_html(desc),
                 }
@@ -259,12 +268,16 @@ def feed_items(source: dict) -> list[dict]:
             continue
 
         link = ""
+        media_url = ""
+        media_type = ""
         for l in it.findall("atom:link", ns):
             rel = l.attrib.get("rel", "alternate")
-            if rel in ("alternate", ""):
-                link = l.attrib.get("href", "")
-                if link:
-                    break
+            href = (l.attrib.get("href") or "").strip()
+            if rel in ("alternate", "") and href and not link:
+                link = href
+            if rel == "enclosure" and href and not media_url:
+                media_url = href
+                media_type = (l.attrib.get("type") or "").strip()
 
         pub_raw = (
             it.findtext("atom:published", default="", namespaces=ns)
@@ -283,6 +296,8 @@ def feed_items(source: dict) -> list[dict]:
                 "source_type": source_type,
                 "title": title,
                 "url": link,
+                "media_url": media_url,
+                "media_type": media_type,
                 "published": dt_obj.isoformat() if dt_obj else "",
                 "description": strip_html(summary),
             }

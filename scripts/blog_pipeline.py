@@ -35,6 +35,11 @@ from pipeline_common import (
     translate_title_to_zh,
     write_post,
 )
+from pipeline_transcribe import (
+    build_transcript_source_text,
+    should_attempt_whisper,
+    transcribe_media_url,
+)
 from pipeline_selection import (
     DEFAULT_MAX_BRIEF_ITEMS,
     DEFAULT_MAX_SKIP_REPORT,
@@ -74,7 +79,6 @@ def generate_one(meta: dict, args) -> Path:
     if page_title and not meta.get("title"):
         meta["title"] = page_title
 
-    # 兜底：页面抓取失败/仅返回 JS 壳时，回退到 feed 摘要，避免单条失败拖垮整轮
     fallback_desc = (meta.get("description") or "").strip()
     if (not page_text.strip() or _looks_like_js_shell(page_text)) and fallback_desc:
         hint = ""
@@ -86,6 +90,26 @@ def generate_one(meta: dict, args) -> Path:
             + hint
         )
 
+    whisper_note = ""
+    if getattr(args, "whisper_fallback", False) and should_attempt_whisper(
+        meta,
+        page_text,
+        getattr(args, "min_source_text_chars", 4000),
+    ):
+        media_url = (meta.get("media_url") or "").strip() or (meta.get("url") or "").strip()
+        transcript_text, whisper_note = transcribe_media_url(
+            media_url,
+            meta=meta,
+            model_name=args.whisper_model,
+            language=(args.whisper_language or None),
+            compute_type=args.compute_type,
+            max_chars=args.max_source_chars,
+        )
+        if transcript_text:
+            page_text = build_transcript_source_text(meta, transcript_text, page_text)
+        elif fallback_desc and not page_text.strip():
+            page_text = fallback_desc
+
     if not page_text.strip() and fetch_err:
         raise RuntimeError(f"source fetch failed and no fallback text: {fetch_err}")
 
@@ -94,8 +118,10 @@ def generate_one(meta: dict, args) -> Path:
     meta["title"] = translate_title_to_zh(raw_title, model=args.model)
 
     source_text = page_text[: args.max_source_chars]
+    if whisper_note and not source_text.strip():
+        raise RuntimeError(f"source text is empty after whisper fallback: {whisper_note}")
     if not source_text.strip():
-        raise RuntimeError("source text is empty (可能被反爬拦截或源文件为空)")
+        raise RuntimeError("source text is empty (可能被反爬拦截、源文件为空，且未能完成 transcript/whisper 兜底)")
 
     prompt = build_prompt(meta, source_text, prompt_file=Path(args.prompt_file))
     body = run_codex(prompt=prompt, model=args.model, reasoning=args.reasoning)
@@ -183,6 +209,8 @@ def cmd_auto(args) -> int:
             "title": item.get("title", ""),
             "program": item.get("source", ""),
             "url": item_url,
+            "media_url": item.get("media_url", ""),
+            "media_type": item.get("media_type", ""),
             "published": item.get("published", ""),
             "description": item.get("description", ""),
             "category": item.get("category", "tech"),
@@ -364,6 +392,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     common.add_argument("--output-filename", default=None, help="Optional fixed output filename under _posts/")
     common.add_argument("--prompt-file", default=str(PROMPT_FILE), help="Prompt template file path")
+    common.add_argument("--whisper-fallback", action="store_true", help="When source text is too thin for audio/video items, try faster-whisper transcript fallback")
+    common.add_argument("--whisper-model", default="small", help="faster-whisper model name for transcript fallback")
+    common.add_argument("--whisper-language", default="", help="Optional language hint for faster-whisper (for example: en / zh)")
+    common.add_argument("--compute-type", default="int8", help="faster-whisper compute type")
+    common.add_argument("--min-source-text-chars", type=int, default=4000, help="Below this threshold, audio/video items may fall back to transcript/whisper")
 
     sp = p.add_subparsers(dest="mode", required=True)
 

@@ -16,6 +16,10 @@ python3 scripts/blog_pipeline.py auto \
   --min-selection-score 70 \
   --max-skip-report 8 \
   --max-brief-items 5 \
+  --whisper-fallback \
+  --whisper-model small \
+  --compute-type int8 \
+  --min-source-text-chars 4000 \
   --model gpt-5.3-codex \
   --reasoning low
 
