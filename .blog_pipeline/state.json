@@ -183,33 +183,14 @@
     "https://eggplant.show/tslog-tv-plays-de-mol-2026-season-episode-1",
     "https://www.latent.space/p/pmarca",
     "https://www.cognitiverevolution.ai/training-the-ais-eyes-how-roboflow-is-making-the-real-world-programmable-with-ceo-joseph-nelson/",
-    "https://interactive.libsyn.com/jenny-jiao-hsia-shares-the-story-of-her-life-in-consume-me"
+    "https://interactive.libsyn.com/jenny-jiao-hsia-shares-the-story-of-her-life-in-consume-me",
+    "https://www.dwarkesh.com/p/michael-nielsen",
+    "https://www.cognitiverevolution.ai/calm-ai-for-crazy-days-inside-granola-s-design-philosophy-with-co-founder-sam-stephenson/",
+    "https://www.latent.space/p/harness-eng"
   ],
-  "last_run": "2026-04-06T21:03:39.760425+08:00",
-  "last_category": "game",
+  "last_run": "2026-04-11T20:05:19.783183+08:00",
+  "last_category": "tech",
   "daily_brief_pool": {
-    "2026-04-04": [
-      {
-        "title": "Success without Dignity?  Nathan finds Hope Amidst Chaos, from The Intelligence Horizon Podcast",
-        "url": "https://www.cognitiverevolution.ai/success-without-dignity-nathan-finds-hope-amidst-chaos-from-the-intelligence-horizon-podcast/",
-        "source": "The Cognitive Revolution",
-        "description": "This special cross-post from The Intelligence Horizon features Nathan Labenz in a wide-ranging conversation on compressed AI timelines, expert disagreement, and why he believes the singularity is near. They discuss interpretability, RL scaling, and the balance between extraordinary upside, like curing major diseases, and serious existential risks. Nathan explains his evolving p(doom), why he’s slightly more optimistic about robustly good AI, and how defense-in-depth strategies might keep society on track. The episode also explores US-China rivalry, AI governance, and why human cooperation may matter more than technical control alone.\n\nGoogle: Keep up with AI research on the go with NotebookLM, Google's steerable research and thinking partner. Try it at https://notebooklm.google.com/.\nSponsors:\n\nTasklet: \nBuild your own Cognitive Revolution monitoring agent in one click.Try it for free and use code COGREV for 50% off your first month at https://tasklet.ai\n\nVCX: \nVCX, by Fundrise, is the public ticker for private tech, giving everyday investors access to high-growth private companies in AI, space, defense tech, and more. Learn how to invest at https://getvcx.com\n\nClaude: \nClaude is the AI collaborator that understands your entire workflow, from drafting and research to coding and complex problem-solving. Start tackling bigger problems with Claude and unlock Claude Pro’s full capabilities at https://claude.ai/tcr\n\nCHAPTERS:\n\n(00:00) About the Episode\n\n(03:27) Special Sponsor\n\n(05:12) Opening and AGI framing\n\n(12:08) Scaling RL and paradigms (Part 1)\n\n(21:31) Sponsors: Tasklet | VCX\n\n(24:24) Scaling RL and paradigms (Part 2)\n\n(28:56) Verifiability and long horizons\n\n(41:13) LLMs and world models (Part 1)\n\n(41:19) Sponsor: Claude\n\n(43:32) LLMs and world models (Part 2)\n\n(54:17) Energy, hardware, and chips\n\n(01:00:42) Alignment risks and bottlenecks\n\n(01:10:18) AI values and agency\n\n(01:20:31) Defense in depth alignment\n\n(01:30:48) US-China AI cooperation\n\n(01:41:05) Episode Outro\n\n(01:45:42) Outro\n\nPRODUCED BY:\n\nhttps://aipodcast.ing\n\nSOCIAL LINKS:\n\nWebsite: https://www.cognitiverevolution.ai\n\nTwitter (Podcast): https://x.com/cogrev_podcast\n\nTwitter (Nathan): https://x.com/labenz\n\nLinkedIn: https://linkedin.com/in/nathanlabenz/\n\nYoutube: https://youtube.com/@CognitiveRevolutionPodcast\n\nApple: https://podcasts.apple.com/de/podcast/the-cognitive-revolution-ai-builders-researchers-and/id1669813431\n\nSpotify: https://open.spotify.com/show/6yHyok3M3BjqzR0VB5MSyk",
-        "category": "tech",
-        "score": 67,
-        "why_not": "总分 67 低于阈值 70",
-        "ts": 1775007550.0
-      },
-      {
-        "title": "Try this at Home: Jesse Genet on OpenClaw Agents for Homeschool & How to Live Your Best AI Life",
-        "url": "https://www.cognitiverevolution.ai/try-this-at-home-jesse-genet-on-openclaw-agents-for-homeschool-how-to-live-your-best-ai-life/",
-        "source": "The Cognitive Revolution",
-        "description": "Jesse Genet shares how she built a team of AI agents to transform homeschooling, family life, and personal productivity without a software background. She explains how agents like an AI chief of staff, curriculum planner, and content creator help design personalized lessons, analyze kids’ learning, manage educational toys, and even run TikTok. The conversation covers practical delegation workflows, guardrails and trust, and why she treats AIs like employees with onboarding and clear roles. Jesse also explores local models, privacy, and how AI in the home could reshape future work and family life.\n\nUse the Granola Recipe Nathan relies on to identify blind spots across conversations, AI research, and decisions: \nSponsors:\n\nVCX: \nVCX, by Fundrise, is the public ticker for private tech, giving everyday investors access to high-growth private companies in AI, space, defense tech, and more. Learn how to invest at https://getvcx.com\n\nClaude: \nClaude is the AI collaborator that understands your entire workflow, from drafting and research to coding and complex problem-solving. Start tackling bigger problems with Claude and unlock Claude Pro’s full capabilities at https://claude.ai/tcr\n\nServal: \nServal uses AI-powered automations to cut IT help desk tickets by more than 50%, freeing your team from repetitive tasks like password resets and onboarding. Book your free pilot and guarantee 50% help desk automation by week 4 at https://serval.com/cognitive\n\nTasklet: \nTasklet is an AI agent that automates your work 24/7; just describe what you want in plain English and it gets the job done. Try it for free and use code COGREV for 50% off your first month at https://tasklet.ai\n\nCHAPTERS:\n\n(00:00) About the Episode\n\n(04:57) Homeschooling context and AI\n\n(15:55) Building an AI team (Part 1)\n\n(19:51) Sponsors: VCX | Claude\n\n(23:18) Building an AI team (Part 2)\n\n(31:03) Onboarding agents like employees (Part 1)\n\n(38:12) Sponsors: Serval | Tasklet\n\n(40:31) Onboarding agents like employees (Part 2)\n\n(40:57) Context, models, and privacy\n\n(48:47) AI intimacy and rights\n\n(56:19) Coordinating agents in Slack\n\n(01:02:19) Designing an agent superapp\n\n(01:08:35) Agent trust and kids\n\n(01:17:57) Voice interfaces for families\n\n(01:29:51) Curated screens and automations\n\n(01:40:28) Sharing setups and software\n\n(01:48:43) Local sovereignty and kid devices\n\n(01:59:26) Work, disruption, and play\n\n(02:04:58) Episode Outro\n\n(02:07:45) Outro\n\nPRODUCED BY:\n\nhttps://aipodcast.ing",
-        "category": "tech",
-        "score": 67,
-        "why_not": "总分 67 低于阈值 70",
-        "ts": 1772966531.0
-      }
-    ],
     "2026-04-05": [
       {
         "title": "Success without Dignity?  Nathan finds Hope Amidst Chaos, from The Intelligence Horizon Podcast",
@@ -232,9 +213,31 @@
         "ts": 1772966531.0
       }
     ],
-    "2026-04-06": []
+    "2026-04-06": [],
+    "2026-04-11": [
+      {
+        "title": "Success without Dignity?  Nathan finds Hope Amidst Chaos, from The Intelligence Horizon Podcast",
+        "url": "https://www.cognitiverevolution.ai/success-without-dignity-nathan-finds-hope-amidst-chaos-from-the-intelligence-horizon-podcast/",
+        "source": "The Cognitive Revolution",
+        "description": "This special cross-post from The Intelligence Horizon features Nathan Labenz in a wide-ranging conversation on compressed AI timelines, expert disagreement, and why he believes the singularity is near. They discuss interpretability, RL scaling, and the balance between extraordinary upside, like curing major diseases, and serious existential risks. Nathan explains his evolving p(doom), why he’s slightly more optimistic about robustly good AI, and how defense-in-depth strategies might keep society on track. The episode also explores US-China rivalry, AI governance, and why human cooperation may matter more than technical control alone.\n\nGoogle: Keep up with AI research on the go with NotebookLM, Google's steerable research and thinking partner. Try it at https://notebooklm.google.com/.\nSponsors:\n\nTasklet: \nBuild your own Cognitive Revolution monitoring agent in one click.Try it for free and use code COGREV for 50% off your first month at https://tasklet.ai\n\nVCX: \nVCX, by Fundrise, is the public ticker for private tech, giving everyday investors access to high-growth private companies in AI, space, defense tech, and more. Learn how to invest at https://getvcx.com\n\nClaude: \nClaude is the AI collaborator that understands your entire workflow, from drafting and research to coding and complex problem-solving. Start tackling bigger problems with Claude and unlock Claude Pro’s full capabilities at https://claude.ai/tcr\n\nCHAPTERS:\n\n(00:00) About the Episode\n\n(03:27) Special Sponsor\n\n(05:12) Opening and AGI framing\n\n(12:08) Scaling RL and paradigms (Part 1)\n\n(21:31) Sponsors: Tasklet | VCX\n\n(24:24) Scaling RL and paradigms (Part 2)\n\n(28:56) Verifiability and long horizons\n\n(41:13) LLMs and world models (Part 1)\n\n(41:19) Sponsor: Claude\n\n(43:32) LLMs and world models (Part 2)\n\n(54:17) Energy, hardware, and chips\n\n(01:00:42) Alignment risks and bottlenecks\n\n(01:10:18) AI values and agency\n\n(01:20:31) Defense in depth alignment\n\n(01:30:48) US-China AI cooperation\n\n(01:41:05) Episode Outro\n\n(01:45:42) Outro\n\nPRODUCED BY:\n\nhttps://aipodcast.ing\n\nSOCIAL LINKS:\n\nWebsite: https://www.cognitiverevolution.ai\n\nTwitter (Podcast): https://x.com/cogrev_podcast\n\nTwitter (Nathan): https://x.com/labenz\n\nLinkedIn: https://linkedin.com/in/nathanlabenz/\n\nYoutube: https://youtube.com/@CognitiveRevolutionPodcast\n\nApple: https://podcasts.apple.com/de/podcast/the-cognitive-revolution-ai-builders-researchers-and/id1669813431\n\nSpotify: https://open.spotify.com/show/6yHyok3M3BjqzR0VB5MSyk",
+        "category": "tech",
+        "score": 67,
+        "why_not": "总分 67 低于阈值 70",
+        "ts": 1775007550.0
+      },
+      {
+        "title": "Try this at Home: Jesse Genet on OpenClaw Agents for Homeschool & How to Live Your Best AI Life",
+        "url": "https://www.cognitiverevolution.ai/try-this-at-home-jesse-genet-on-openclaw-agents-for-homeschool-how-to-live-your-best-ai-life/",
+        "source": "The Cognitive Revolution",
+        "description": "Jesse Genet shares how she built a team of AI agents to transform homeschooling, family life, and personal productivity without a software background. She explains how agents like an AI chief of staff, curriculum planner, and content creator help design personalized lessons, analyze kids’ learning, manage educational toys, and even run TikTok. The conversation covers practical delegation workflows, guardrails and trust, and why she treats AIs like employees with onboarding and clear roles. Jesse also explores local models, privacy, and how AI in the home could reshape future work and family life.\n\nUse the Granola Recipe Nathan relies on to identify blind spots across conversations, AI research, and decisions: \nSponsors:\n\nVCX: \nVCX, by Fundrise, is the public ticker for private tech, giving everyday investors access to high-growth private companies in AI, space, defense tech, and more. Learn how to invest at https://getvcx.com\n\nClaude: \nClaude is the AI collaborator that understands your entire workflow, from drafting and research to coding and complex problem-solving. Start tackling bigger problems with Claude and unlock Claude Pro’s full capabilities at https://claude.ai/tcr\n\nServal: \nServal uses AI-powered automations to cut IT help desk tickets by more than 50%, freeing your team from repetitive tasks like password resets and onboarding. Book your free pilot and guarantee 50% help desk automation by week 4 at https://serval.com/cognitive\n\nTasklet: \nTasklet is an AI agent that automates your work 24/7; just describe what you want in plain English and it gets the job done. Try it for free and use code COGREV for 50% off your first month at https://tasklet.ai\n\nCHAPTERS:\n\n(00:00) About the Episode\n\n(04:57) Homeschooling context and AI\n\n(15:55) Building an AI team (Part 1)\n\n(19:51) Sponsors: VCX | Claude\n\n(23:18) Building an AI team (Part 2)\n\n(31:03) Onboarding agents like employees (Part 1)\n\n(38:12) Sponsors: Serval | Tasklet\n\n(40:31) Onboarding agents like employees (Part 2)\n\n(40:57) Context, models, and privacy\n\n(48:47) AI intimacy and rights\n\n(56:19) Coordinating agents in Slack\n\n(01:02:19) Designing an agent superapp\n\n(01:08:35) Agent trust and kids\n\n(01:17:57) Voice interfaces for families\n\n(01:29:51) Curated screens and automations\n\n(01:40:28) Sharing setups and software\n\n(01:48:43) Local sovereignty and kid devices\n\n(01:59:26) Work, disruption, and play\n\n(02:04:58) Episode Outro\n\n(02:07:45) Outro\n\nPRODUCED BY:\n\nhttps://aipodcast.ing",
+        "category": "tech",
+        "score": 67,
+        "why_not": "总分 67 低于阈值 70",
+        "ts": 1772966531.0
+      }
+    ]
   },
-  "last_generated_count": 1,
+  "last_generated_count": 3,
   "strict_select": true,
   "min_selection_score": 70,
   "last_daily_brief": "2026-04-10T22:34:22.520065+08:00",
