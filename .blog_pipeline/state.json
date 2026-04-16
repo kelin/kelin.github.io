@@ -186,12 +186,16 @@
     "https://interactive.libsyn.com/jenny-jiao-hsia-shares-the-story-of-her-life-in-consume-me",
     "https://www.dwarkesh.com/p/michael-nielsen",
     "https://www.cognitiverevolution.ai/calm-ai-for-crazy-days-inside-granola-s-design-philosophy-with-co-founder-sam-stephenson/",
-    "https://www.latent.space/p/harness-eng"
+    "https://www.latent.space/p/harness-eng",
+    "https://www.dwarkesh.com/p/jensen-huang",
+    "https://www.cognitiverevolution.ai/welcome-to-ai-in-the-am-rl-for-ee-oversight-w-out-nationalization-the-first-ai-run-retail-store/",
+    "https://www.latent.space/p/notion"
   ],
-  "last_run": "2026-04-11T20:05:19.783183+08:00",
+  "last_run": "2026-04-16T11:22:55.913902+08:00",
   "last_category": "tech",
   "daily_brief_pool": {
-    "2026-04-05": [
+    "2026-04-06": [],
+    "2026-04-11": [
       {
         "title": "Success without Dignity?  Nathan finds Hope Amidst Chaos, from The Intelligence Horizon Podcast",
         "url": "https://www.cognitiverevolution.ai/success-without-dignity-nathan-finds-hope-amidst-chaos-from-the-intelligence-horizon-podcast/",
@@ -213,8 +217,17 @@
         "ts": 1772966531.0
       }
     ],
-    "2026-04-06": [],
-    "2026-04-11": [
+    "2026-04-16": [
+      {
+        "title": "It's Crunch Time: Ajeya Cotra on RSI & AI-Powered AI Safety Work, from the 80,000 Hours Podcast",
+        "url": "https://www.cognitiverevolution.ai/it-s-crunch-time-ajeya-cotra-on-rsi-ai-powered-ai-safety-work-from-the-80000-hours-podcast/",
+        "source": "The Cognitive Revolution",
+        "description": "This cross-post from the 80,000 Hours podcast features Ajeya Cotra in conversation with Rob Wiblin about AI timelines, recursive self-improvement, and the “crunch time” window when AI could rapidly accelerate its own development. Ajeya explains why widespread, compounding automation may face fewer bottlenecks than many expect, and what that could mean for the world by 2050. They also discuss transparency, early warning systems, and the emerging strategy of using each generation of AI to align and control its successors.\n\nLINKS:\nAjeya Cotra podcast episode\nSponsors:\n\nAvePoint: \nAvePoint is building the control layer for AI agents so you can securely govern, audit, and recover every action at scale. Design trusted agentic outcomes from day one at https://avpt.co/tcr\n\nVCX: \nVCX, by Fundrise, is the public ticker for private tech, giving everyday investors access to high-growth private companies in AI, space, defense tech, and more. Learn how to invest at https://getvcx.com\n\nClaude: \nClaude is the AI collaborator that understands your entire workflow, from drafting and research to coding and complex problem-solving. Start tackling bigger problems with Claude and unlock Claude Pro’s full capabilities at https://claude.ai/tcr\n\nTasklet: \nBuild your own Cognitive Revolution monitoring agent in one click.Try it for free and use code COGREV for 50% off your first month at https://tasklet.ai\n\nCHAPTERS:\n\n(00:00) About the Episode\n\n(04:17) AI inside safety plans\n\n(06:49) AGI growth expectations (Part 1)\n\n(18:32) Sponsors: AvePoint | VCX\n\n(20:54) AGI growth expectations (Part 2)\n\n(21:56) Disagreement and measurement (Part 1)\n\n(37:28) Sponsors: Claude | Tasklet\n\n(41:19) Disagreement and measurement (Part 2)\n\n(41:19) Transparency before takeoff\n\n(58:00) Redirecting AI labor\n\n(01:09:06) Defense plans and limits\n\n(01:25:26) Pausing versus redirecting\n\n(01:35:22) Open Phil and compute\n\n(01:50:16) Bottlenecks and preparation\n\n(01:57:42) From research to grants\n\n(02:13:03) Burnout and sabbatical\n\n(02:23:22) What EA offered\n\n(02:36:43) EA and religion\n\n(02:47:56) Next career steps\n\n(02:57:35) EA's future niche\n\n(03:08:15) Episode Outro\n\n(03:12:11) Outro\n\nPRODUCED BY:\n\nhttps://aipodcast.ing",
+        "category": "tech",
+        "score": 67,
+        "why_not": "总分 67 低于阈值 70",
+        "ts": 1775908494.0
+      },
       {
         "title": "Success without Dignity?  Nathan finds Hope Amidst Chaos, from The Intelligence Horizon Podcast",
         "url": "https://www.cognitiverevolution.ai/success-without-dignity-nathan-finds-hope-amidst-chaos-from-the-intelligence-horizon-podcast/",
